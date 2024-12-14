@@ -1,7 +1,5 @@
-use std::sync::{atomic::AtomicBool, Arc};
-
-use once_cell::sync::Lazy;
+use std::sync::atomic::AtomicBool;
 
 pub mod utils;
 
-pub static DONE: Lazy<Arc<AtomicBool>> = Lazy::new(|| Arc::new(AtomicBool::new(false)));
+pub static DONE: AtomicBool = AtomicBool::new(false);

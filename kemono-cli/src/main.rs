@@ -80,10 +80,9 @@ async fn main() -> Result<()> {
     let api = Arc::new(API::new());
 
     {
-        let done = Arc::clone(&DONE);
         ctrlc::set_handler(move || {
             info!("Signal handler called");
-            done.store(true, Ordering::Relaxed);
+            DONE.store(true, Ordering::Relaxed);
         })?;
     }
 
