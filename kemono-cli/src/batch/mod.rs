@@ -27,8 +27,6 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
     let blacklist_filename_regex = ctx.blacklist_filename_regexes();
 
     let semaphore = Arc::new(Semaphore::new(max_concurrency));
-    let web_name = web_name.as_ref();
-    let user_id = user_id.as_ref();
     let whitelist_regex = RegexSet::new(whitelist_regex)?;
     let blacklist_regex = RegexSet::new(blacklist_regex)?;
     let whitelist_filename_regex = RegexSet::new(whitelist_filename_regex)?;
@@ -37,6 +35,8 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
     let api = API::new();
     let mut offset = 0;
 
+    // 替换特殊字串符
+    let clear_title_re = regex::Regex::new(r#"[\\/:*?"<>|]"#)?;
     loop {
         if DONE.load(Ordering::Relaxed) {
             break;
@@ -46,8 +46,6 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
             props: Props { count, limit },
             results,
         } = api.get_posts_legacy(web_name, user_id, offset).await?;
-
-        let clear_title_re = regex::Regex::new(r#"[\\/:*?"<>|]"#)?; // 替换特殊字串符
 
         for PLResult {
             id: ref post_id,
@@ -71,7 +69,7 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
             let PostInfo {
                 attachments,
                 previews,
-            } = api.get_post_info(&web_name, &user_id, post_id).await?;
+            } = api.get_post_info(web_name, user_id, post_id).await?;
 
             let mut save_path = output_dir.join(title);
             if let Err(e) = fs::create_dir_all(&save_path).await {
