@@ -28,25 +28,25 @@ struct Cli {
 
     /// Whitelist regex for title
     ///
-    /// Specify multiple times means 'OR' semantic
+    /// Specify multiple times means 'AND' semantic
     #[arg(long, short = 'w')]
     whitelist_regex: Vec<String>,
 
     /// Blacklist regex for title
     ///
-    /// Specify multiple times means 'OR' semantic
+    /// Specify multiple times means 'AND' semantic
     #[arg(long, short = 'b')]
     blacklist_regex: Vec<String>,
 
     /// Whitelist regex for filename
     ///
-    /// Specify multiple times means 'OR' semantic
+    /// Specify multiple times means 'AND' semantic
     #[arg(long, short = 'W')]
     whitelist_filename_regex: Vec<String>,
 
     /// Blacklist regex for filename
     ///
-    /// Specify multiple times means 'OR' semantic
+    /// Specify multiple times means 'AND' semantic
     #[arg(long, short = 'B')]
     blacklist_filename_regex: Vec<String>,
 }

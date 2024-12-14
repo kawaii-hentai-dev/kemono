@@ -11,7 +11,7 @@ use tracing::{error, info, warn};
 use kemono_api::model::posts_legacy::{PostsLegacy, Props, Result as PLResult};
 use kemono_api::API;
 
-use crate::utils::download_single;
+use crate::utils::{download_single, whiteblack_regex_filter};
 use crate::DONE;
 
 pub mod ctx;
@@ -56,13 +56,8 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
                 return Ok(());
             }
 
-            if !whitelist_regex.is_empty() && !whitelist_regex.is_match(title) {
-                info!("Skipped {title} due to whitelist mismatch");
-                continue;
-            }
-
-            if blacklist_regex.is_match(title) {
-                info!("Skipped {title} due to blacklist match");
+            if !whiteblack_regex_filter(&whitelist_regex, &blacklist_regex, title) {
+                info!("Skipped {title} by filter");
                 continue;
             }
 
@@ -86,6 +81,7 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
 
             let mut futures = Vec::new();
 
+            info!("Downloading attachments from {title}");
             for attach in attachments.iter().chain(previews.iter()) {
                 if DONE.load(Ordering::Relaxed) {
                     break;
@@ -101,15 +97,12 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
                     continue;
                 };
 
-                if !whitelist_filename_regex.is_empty()
-                    && !whitelist_filename_regex.is_match(file_name)
-                {
-                    info!("Skipped {file_name} due to whitelist mismatch");
-                    continue;
-                }
-
-                if blacklist_filename_regex.is_match(file_name) {
-                    info!("Skipped {file_name} due to blacklist match");
+                if !whiteblack_regex_filter(
+                    &whitelist_filename_regex,
+                    &blacklist_filename_regex,
+                    &file_name,
+                ) {
+                    info!("Skipped {file_name} by filter");
                     continue;
                 }
 

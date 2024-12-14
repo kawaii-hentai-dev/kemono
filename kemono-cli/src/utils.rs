@@ -4,7 +4,7 @@ use anyhow::Result;
 use futures::StreamExt;
 use kemono_api::API;
 use once_cell::sync::Lazy;
-use regex::Regex;
+use regex::{Regex, RegexSet};
 
 use tokio::{fs::File, io::AsyncWriteExt};
 use tracing::{error, info, info_span, warn};
@@ -21,6 +21,20 @@ pub fn extract_info(url: &str) -> (Option<String>, Option<String>) {
         (web_name, user_id)
     } else {
         (None, None)
+    }
+}
+
+/// Returns true if passed check
+pub fn whiteblack_regex_filter(white: &RegexSet, black: &RegexSet, heytrack: &str) -> bool {
+    let white_matched = white.matches(heytrack).matched_all();
+    let black_matched = black.matches(heytrack).matched_all();
+
+    match (white_matched, black_matched) {
+        _ if white.is_empty() && white.is_empty() => true,
+        _ if black.is_empty() => white_matched,
+        _ if white.is_empty() => !black_matched,
+        (true, false) => true,
+        _ => false,
     }
 }
 
