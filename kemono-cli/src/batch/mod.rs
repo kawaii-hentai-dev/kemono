@@ -1,4 +1,3 @@
-use std::path::PathBuf;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 
@@ -12,12 +11,14 @@ use tracing::{error, info, warn};
 use crate::utils::download_single;
 use crate::DONE;
 
-pub async fn download_loop(
-    web_name: impl AsRef<str>,
-    user_id: impl AsRef<str>,
-    max_concurrency: usize,
-    output_dir: &PathBuf,
-) -> Result<()> {
+pub mod ctx;
+
+pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
+    let web_name = ctx.web_name();
+    let user_id = ctx.user_id();
+    let max_concurrency = ctx.max_concurrency();
+    let output_dir = ctx.output_dir();
+
     let semaphore = Arc::new(Semaphore::new(max_concurrency));
     let web_name = web_name.as_ref();
     let user_id = user_id.as_ref();

@@ -7,7 +7,11 @@ use tracing::{error, info, level_filters::LevelFilter, Level};
 use tracing_indicatif::IndicatifLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, Layer};
 
-use kemono_cli::{batch::download_loop, utils::extract_info, DONE};
+use kemono_cli::{
+    batch::{ctx::Args, download_loop},
+    utils::extract_info,
+    DONE,
+};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about = "Download tool")]
@@ -62,7 +66,14 @@ async fn main() -> Result<()> {
     })?;
 
     let max_concurrency = cli.max_concurrency.unwrap_or(4);
-    download_loop(web_name, user_id, max_concurrency, &output_dir).await?;
+
+    let args = Args::builder()
+        .web_name(web_name)
+        .user_id(user_id)
+        .max_concurrency(max_concurrency)
+        .output_dir(output_dir)
+        .build()?;
+    download_loop(&args).await?;
 
     info!("Task Exit");
 
