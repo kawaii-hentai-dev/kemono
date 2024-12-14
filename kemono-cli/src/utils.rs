@@ -1,7 +1,4 @@
-use std::{
-    path::Path,
-    sync::{atomic::Ordering, Arc},
-};
+use std::{path::Path, sync::atomic::Ordering};
 
 use anyhow::Result;
 use futures::StreamExt;
@@ -27,12 +24,7 @@ pub fn extract_info(url: &str) -> (Option<String>, Option<String>) {
     }
 }
 
-pub async fn download_file(
-    api: Arc<API>,
-    url: &str,
-    save_dir: &Path,
-    file_name: &str,
-) -> Result<()> {
+pub async fn download_file(api: API, url: &str, save_dir: &Path, file_name: &str) -> Result<()> {
     if DONE.load(Ordering::Relaxed) {
         return Ok(());
     }

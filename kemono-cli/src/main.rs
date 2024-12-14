@@ -77,7 +77,7 @@ async fn main() -> Result<()> {
 
     fs::create_dir_all(&output_dir)?;
 
-    let api = Arc::new(API::new());
+    let api = API::new();
 
     {
         ctrlc::set_handler(move || {
@@ -174,14 +174,14 @@ async fn main() -> Result<()> {
                 let file_url = format!("{}/data{}", file_server, file_path);
                 info!("Downloading file from {}", file_name);
 
-                let api_ref = Arc::clone(&api);
+                let api = api.clone();
                 let sem = Arc::clone(&semaphore);
                 let sp = save_path.clone();
                 let fname = file_name.to_string();
                 let furl = file_url.clone();
                 let fut = async move {
                     let _permit = sem.acquire().await;
-                    if let Err(e) = download_file(api_ref, &furl, &sp, &fname).await {
+                    if let Err(e) = download_file(api, &furl, &sp, &fname).await {
                         error!("Error downloading {}: {:?}", fname, e);
                     }
                 };

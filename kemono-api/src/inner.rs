@@ -1,20 +1,14 @@
 use anyhow::Result;
 use serde_json::Value;
 
+#[derive(Default, Clone)]
 pub struct API {
     client: reqwest::Client,
 }
 
-impl Default for API {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl API {
     pub fn new() -> Self {
-        let client = reqwest::Client::builder().build().unwrap();
-        API { client }
+        Self::default()
     }
 
     pub async fn head(&self, url: &str) -> Result<reqwest::Response> {
