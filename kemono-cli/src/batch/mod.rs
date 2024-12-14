@@ -62,6 +62,7 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
             }
 
             let PostInfo {
+                post,
                 attachments,
                 previews,
             } = api.get_post_info(web_name, user_id, post_id).await?;
@@ -78,6 +79,13 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
                     return Err(e.into());
                 }
             }
+
+            let metadata_path = save_path.join("metadata.json");
+            fs::write(
+                metadata_path,
+                kemono_api::serde_json::to_string_pretty(&post)?,
+            )
+            .await?;
 
             let mut futures = Vec::new();
 
