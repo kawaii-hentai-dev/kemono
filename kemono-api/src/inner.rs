@@ -1,6 +1,8 @@
 use anyhow::Result;
 use serde_json::Value;
 
+use crate::model::posts_legacy::PostsLegacy;
+
 #[derive(Default, Clone)]
 pub struct API {
     client: reqwest::Client,
@@ -36,7 +38,7 @@ impl API {
         web_name: &str,
         user_id: &str,
         offset: usize,
-    ) -> Result<Value> {
+    ) -> Result<PostsLegacy> {
         let url = format!(
             "https://kemono.su/api/v1/{}/user/{}/posts-legacy",
             web_name, user_id
@@ -58,7 +60,7 @@ impl API {
                 resp.status()
             ));
         }
-        let val: Value = resp.json().await?;
+        let val = resp.json().await?;
         Ok(val)
     }
 

@@ -2,12 +2,14 @@ use std::sync::atomic::Ordering;
 use std::sync::Arc;
 
 use anyhow::Result;
-use kemono_api::API;
 use regex::RegexSet;
 use serde_json::Value;
 use tokio::fs;
 use tokio::sync::Semaphore;
 use tracing::{error, info, warn};
+
+use kemono_api::model::posts_legacy::{PostsLegacy, Props, Result as PLResult};
+use kemono_api::API;
 
 use crate::utils::download_single;
 use crate::DONE;
@@ -36,35 +38,21 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
             break;
         }
 
-        let posts_legacy_data = api.get_posts_legacy(web_name, user_id, offset).await?;
-        let props = posts_legacy_data
-            .get("props")
-            .and_then(Value::as_object)
-            .cloned()
-            .unwrap_or_default();
-        let limit = props.get("limit").and_then(Value::as_u64).unwrap_or(0) as usize;
-        let count = props.get("count").and_then(Value::as_u64).unwrap_or(0) as usize;
-        let results = posts_legacy_data
-            .get("results")
-            .and_then(Value::as_array)
-            .cloned()
-            .unwrap_or_default();
+        let PostsLegacy {
+            props: Props { count, limit },
+            results,
+        } = api.get_posts_legacy(web_name, user_id, offset).await?;
 
         let clear_title_re = regex::Regex::new(r#"[\\/:*?"<>|]"#)?; // 替换特殊字串符
-        for result_val in results {
+
+        for PLResult {
+            id: ref post_id,
+            ref title,
+        } in results
+        {
             if DONE.load(Ordering::Relaxed) {
                 return Ok(());
             }
-
-            let Some(post_id) = result_val.get("id").and_then(Value::as_str) else {
-                error!("Post id not found");
-                continue;
-            };
-
-            let Some(title) = result_val.get("title").and_then(Value::as_str) else {
-                error!("Title Not Found");
-                continue;
-            };
 
             if !whitelist_regex.is_empty() && !whitelist_regex.is_match(title) {
                 info!("Skipped {title} due to whitelist mismatch");
