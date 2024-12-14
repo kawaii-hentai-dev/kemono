@@ -2,8 +2,8 @@ use std::sync::atomic::Ordering;
 use std::sync::Arc;
 
 use anyhow::Result;
+use kemono_api::model::post_info::{AttachmentLike, PostInfo};
 use regex::RegexSet;
-use serde_json::Value;
 use tokio::fs;
 use tokio::sync::Semaphore;
 use tracing::{error, info, warn};
@@ -64,17 +64,10 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
                 continue;
             }
 
-            let post_data = api.get_post_info(&web_name, &user_id, post_id).await?;
-            let attachments = post_data
-                .get("attachments")
-                .and_then(Value::as_array)
-                .cloned()
-                .unwrap_or_default();
-            let previews = post_data
-                .get("previews")
-                .and_then(Value::as_array)
-                .cloned()
-                .unwrap_or_default();
+            let PostInfo {
+                attachments,
+                previews,
+            } = api.get_post_info(&web_name, &user_id, post_id).await?;
 
             let mut save_path = output_dir.join(title);
             if let Err(e) = fs::create_dir_all(&save_path).await {
@@ -96,16 +89,13 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
                     break;
                 }
 
-                let Some(file_name) = attach.get("name").and_then(Value::as_str) else {
-                    warn!("File name not found in attachment");
-                    continue;
-                };
-                let Some(file_server) = attach.get("server").and_then(Value::as_str) else {
-                    warn!("File server not found");
-                    continue;
-                };
-                let Some(file_path) = attach.get("path").and_then(Value::as_str) else {
-                    warn!("File path not found");
+                let AttachmentLike {
+                    server: Some(file_server),
+                    name: Some(file_name),
+                    path: Some(file_path),
+                } = attach
+                else {
+                    warn!("missing field in attach {attach:?}");
                     continue;
                 };
 

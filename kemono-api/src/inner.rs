@@ -1,7 +1,6 @@
 use anyhow::Result;
-use serde_json::Value;
 
-use crate::model::posts_legacy::PostsLegacy;
+use crate::model::{post_info::PostInfo, posts_legacy::PostsLegacy};
 
 #[derive(Default, Clone)]
 pub struct API {
@@ -69,7 +68,7 @@ impl API {
         web_name: &str,
         user_id: &str,
         post_id: &str,
-    ) -> Result<Value> {
+    ) -> Result<PostInfo> {
         let url = format!(
             "https://kemono.su/api/v1/{}/user/{}/post/{}",
             web_name, user_id, post_id
@@ -93,7 +92,7 @@ impl API {
                 resp.status()
             ));
         }
-        let val: Value = resp.json().await?;
+        let val = resp.json().await?;
         Ok(val)
     }
 }
