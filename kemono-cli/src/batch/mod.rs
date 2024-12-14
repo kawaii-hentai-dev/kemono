@@ -23,12 +23,16 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
     let output_dir = ctx.output_dir();
     let whitelist_regex = ctx.whitelist_regexes();
     let blacklist_regex = ctx.blacklist_regexes();
+    let whitelist_filename_regex = ctx.whitelist_filename_regexes();
+    let blacklist_filename_regex = ctx.blacklist_filename_regexes();
 
     let semaphore = Arc::new(Semaphore::new(max_concurrency));
     let web_name = web_name.as_ref();
     let user_id = user_id.as_ref();
     let whitelist_regex = RegexSet::new(whitelist_regex)?;
     let blacklist_regex = RegexSet::new(blacklist_regex)?;
+    let whitelist_filename_regex = RegexSet::new(whitelist_filename_regex)?;
+    let blacklist_filename_regex = RegexSet::new(blacklist_filename_regex)?;
 
     let api = API::new();
     let mut offset = 0;
@@ -98,6 +102,18 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
                     warn!("missing field in attach {attach:?}");
                     continue;
                 };
+
+                if !whitelist_filename_regex.is_empty()
+                    && !whitelist_filename_regex.is_match(file_name)
+                {
+                    info!("Skipped {file_name} due to whitelist mismatch");
+                    continue;
+                }
+
+                if blacklist_filename_regex.is_match(file_name) {
+                    info!("Skipped {file_name} due to blacklist match");
+                    continue;
+                }
 
                 let file_url = format!("{}/data{}", file_server, file_path);
                 info!("Downloading file from {}", file_name);

@@ -9,6 +9,8 @@ pub trait Context<'a> {
     fn max_concurrency(&self) -> usize;
     fn whitelist_regexes(&self) -> impl Iterator<Item = &'a str>;
     fn blacklist_regexes(&self) -> impl Iterator<Item = &'a str>;
+    fn whitelist_filename_regexes(&self) -> impl Iterator<Item = &'a str>;
+    fn blacklist_filename_regexes(&self) -> impl Iterator<Item = &'a str>;
 }
 
 #[derive(Clone, Builder, PartialEq, Eq, Default)]
@@ -21,6 +23,10 @@ pub struct Args {
     whitelist_regexes: Vec<String>,
     #[builder(default = "Vec::new()")]
     blacklist_regexes: Vec<String>,
+    #[builder(default = "Vec::new()")]
+    whitelist_filename_regexes: Vec<String>,
+    #[builder(default = "Vec::new()")]
+    blacklist_filename_regexes: Vec<String>,
 }
 
 impl Args {
@@ -52,5 +58,13 @@ impl<'a> Context<'a> for &'a Args {
 
     fn blacklist_regexes(&self) -> impl Iterator<Item = &'a str> {
         self.blacklist_regexes.iter().map(String::as_str)
+    }
+
+    fn whitelist_filename_regexes(&self) -> impl Iterator<Item = &'a str> {
+        self.whitelist_filename_regexes.iter().map(String::as_str)
+    }
+
+    fn blacklist_filename_regexes(&self) -> impl Iterator<Item = &'a str> {
+        self.blacklist_filename_regexes.iter().map(String::as_str)
     }
 }

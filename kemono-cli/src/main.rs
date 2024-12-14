@@ -37,6 +37,18 @@ struct Cli {
     /// Specify multiple times means 'OR' semantic
     #[arg(long, short = 'b')]
     blacklist_regex: Vec<String>,
+
+    /// Whitelist regex for filename
+    ///
+    /// Specify multiple times means 'OR' semantic
+    #[arg(long, short = 'W')]
+    whitelist_filename_regex: Vec<String>,
+
+    /// Blacklist regex for filename
+    ///
+    /// Specify multiple times means 'OR' semantic
+    #[arg(long, short = 'B')]
+    blacklist_filename_regex: Vec<String>,
 }
 
 #[tokio::main]
@@ -69,6 +81,8 @@ async fn main() -> Result<()> {
         max_concurrency,
         whitelist_regex,
         blacklist_regex,
+        whitelist_filename_regex,
+        blacklist_filename_regex,
     } = Cli::parse();
 
     let (Some(web_name), Some(user_id)) = extract_info(&url) else {
@@ -97,6 +111,8 @@ async fn main() -> Result<()> {
         .output_dir(output_dir)
         .whitelist_regexes(whitelist_regex)
         .blacklist_regexes(blacklist_regex)
+        .whitelist_filename_regexes(whitelist_filename_regex)
+        .blacklist_filename_regexes(blacklist_filename_regex)
         .build()?;
     download_loop(&args).await?;
 
