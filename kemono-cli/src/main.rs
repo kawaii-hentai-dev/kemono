@@ -16,13 +16,25 @@ use kemono_cli::{
 #[derive(Parser, Debug)]
 #[command(author, version, about = "Download tool")]
 struct Cli {
+    /// URL to fetch posts
     url: String,
+    /// Output directory of fetched posts
     #[arg(long, default_value = "./download")]
     output_dir: PathBuf,
+
+    /// Maximium number of tasks running in background concurrently
     #[arg(long, short = 'p', default_value_t = 4)]
     max_concurrency: usize,
+
+    /// Whitelist regex for title
+    ///
+    /// Specify multiple times means 'OR' semantic
     #[arg(long, short = 'w')]
     whitelist_regex: Vec<String>,
+
+    /// Blacklist regex for title
+    ///
+    /// Specify multiple times means 'OR' semantic
     #[arg(long, short = 'b')]
     blacklist_regex: Vec<String>,
 }
