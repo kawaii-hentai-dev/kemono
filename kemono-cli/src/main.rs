@@ -69,8 +69,13 @@ async fn main() -> Result<()> {
     fs::create_dir_all(&output_dir)?;
 
     ctrlc::set_handler(move || {
-        info!("Signal handler called");
-        DONE.store(true, Ordering::Relaxed);
+        if DONE.load(Ordering::Acquire) {
+            info!("Signal handler called twice, force-exiting");
+            std::process::exit(127);
+        } else {
+            info!("Signal handler called");
+        }
+        DONE.store(true, Ordering::Release);
     })?;
 
     let args = Args::builder()
