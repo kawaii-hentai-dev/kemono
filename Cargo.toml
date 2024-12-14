@@ -1,0 +1,6 @@
+[workspace]
+members = ["kemono-cli", "kemono-api"]
+resolver = "2"
+
+[patch.crates-io]
+tracing-indicatif = { git = "https://github.com/mokurin000/tracing-indicatif", branch = "feat-finish-clear" }
