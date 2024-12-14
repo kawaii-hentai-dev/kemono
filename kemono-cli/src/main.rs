@@ -23,6 +23,8 @@ struct Cli {
     max_concurrency: usize,
     #[arg(long, short = 'w')]
     whitelist_regex: Vec<String>,
+    #[arg(long, short = 'b')]
+    blacklist_regex: Vec<String>,
 }
 
 #[tokio::main]
@@ -54,6 +56,7 @@ async fn main() -> Result<()> {
         output_dir,
         max_concurrency,
         whitelist_regex,
+        blacklist_regex,
     } = Cli::parse();
 
     let (Some(web_name), Some(user_id)) = extract_info(&url) else {
@@ -76,6 +79,7 @@ async fn main() -> Result<()> {
         .max_concurrency(max_concurrency)
         .output_dir(output_dir)
         .whitelist_regexes(whitelist_regex)
+        .blacklist_regexes(blacklist_regex)
         .build()?;
     download_loop(&args).await?;
 

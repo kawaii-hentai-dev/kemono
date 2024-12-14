@@ -20,11 +20,13 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
     let max_concurrency = ctx.max_concurrency();
     let output_dir = ctx.output_dir();
     let whitelist_regex = ctx.whitelist_regexes();
+    let blacklist_regex = ctx.blacklist_regexes();
 
     let semaphore = Arc::new(Semaphore::new(max_concurrency));
     let web_name = web_name.as_ref();
     let user_id = user_id.as_ref();
-    let whilelist_regex = RegexSet::new(whitelist_regex)?;
+    let whitelist_regex = RegexSet::new(whitelist_regex)?;
+    let blacklist_regex = RegexSet::new(blacklist_regex)?;
 
     let api = API::new();
     let mut offset = 0;
@@ -64,8 +66,13 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
                 continue;
             };
 
-            if !whilelist_regex.is_empty() && !whilelist_regex.is_match(title) {
+            if !whitelist_regex.is_empty() && !whitelist_regex.is_match(title) {
                 info!("Skipped {title} due to whitelist mismatch");
+                continue;
+            }
+
+            if blacklist_regex.is_match(title) {
+                info!("Skipped {title} due to blacklist match");
                 continue;
             }
 
