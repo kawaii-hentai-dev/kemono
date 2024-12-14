@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use kemono_api::API;
+use regex::RegexSet;
 use serde_json::Value;
 use tokio::fs;
 use tokio::sync::Semaphore;
@@ -18,10 +19,12 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
     let user_id = ctx.user_id();
     let max_concurrency = ctx.max_concurrency();
     let output_dir = ctx.output_dir();
+    let whitelist_regex = ctx.whitelist_regexes();
 
     let semaphore = Arc::new(Semaphore::new(max_concurrency));
     let web_name = web_name.as_ref();
     let user_id = user_id.as_ref();
+    let whilelist_regex = RegexSet::new(whitelist_regex)?;
 
     let api = API::new();
     let mut offset = 0;
@@ -60,6 +63,11 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
                 error!("Title Not Found");
                 continue;
             };
+
+            if !whilelist_regex.is_empty() && !whilelist_regex.is_match(title) {
+                info!("Skipped {title} due to whitelist mismatch");
+                continue;
+            }
 
             let post_data = api.get_post_info(&web_name, &user_id, post_id).await?;
             let attachments = post_data

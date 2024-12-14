@@ -17,10 +17,12 @@ use kemono_cli::{
 #[command(author, version, about = "Download tool")]
 struct Cli {
     url: String,
-    #[arg(long)]
-    output_dir: Option<PathBuf>,
-    #[arg(long, short = 'p')]
-    max_concurrency: Option<usize>,
+    #[arg(long, default_value = "./download")]
+    output_dir: PathBuf,
+    #[arg(long, short = 'p', default_value_t = 4)]
+    max_concurrency: usize,
+    #[arg(long, short = 'w')]
+    whitelist_regex: Vec<String>,
 }
 
 #[tokio::main]
@@ -46,17 +48,20 @@ async fn main() -> Result<()> {
         .init();
 
     let cli = Cli::parse();
+    info!("Started with arguments: {cli:?}");
+    let Cli {
+        url,
+        output_dir,
+        max_concurrency,
+        whitelist_regex,
+    } = Cli::parse();
 
-    let (Some(web_name), Some(user_id)) = extract_info(&cli.url) else {
+    let (Some(web_name), Some(user_id)) = extract_info(&url) else {
         error!("URL Error: cannot parse web_name and user_id");
         return Ok(());
     };
 
-    info!("Download URL: {}", &cli.url);
-
-    let output_dir = cli
-        .output_dir
-        .unwrap_or(std::env::current_dir()?.join("download"));
+    info!("Download URL: {}", &url);
 
     fs::create_dir_all(&output_dir)?;
 
@@ -65,13 +70,12 @@ async fn main() -> Result<()> {
         DONE.store(true, Ordering::Relaxed);
     })?;
 
-    let max_concurrency = cli.max_concurrency.unwrap_or(4);
-
     let args = Args::builder()
         .web_name(web_name)
         .user_id(user_id)
         .max_concurrency(max_concurrency)
         .output_dir(output_dir)
+        .whitelist_regexes(whitelist_regex)
         .build()?;
     download_loop(&args).await?;
 

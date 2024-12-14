@@ -7,6 +7,7 @@ pub trait Context<'a> {
     fn user_id(&self) -> &'a str;
     fn output_dir(&self) -> &'a PathBuf;
     fn max_concurrency(&self) -> usize;
+    fn whitelist_regexes(&self) -> impl Iterator<Item = &'a str>;
 }
 
 #[derive(Clone, Builder, PartialEq, Eq, Default)]
@@ -15,6 +16,8 @@ pub struct Args {
     user_id: String,
     output_dir: PathBuf,
     max_concurrency: usize,
+    #[builder(default = "Vec::new()")]
+    whitelist_regexes: Vec<String>,
 }
 
 impl Args {
@@ -38,5 +41,9 @@ impl<'a> Context<'a> for &'a Args {
 
     fn output_dir(&self) -> &'a PathBuf {
         &self.output_dir
+    }
+
+    fn whitelist_regexes(&self) -> impl Iterator<Item = &'a str> {
+        self.whitelist_regexes.iter().map(String::as_str)
     }
 }
