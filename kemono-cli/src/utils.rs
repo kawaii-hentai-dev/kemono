@@ -5,16 +5,16 @@ use std::{
 
 use anyhow::Result;
 use futures::StreamExt;
-use kemono_api::API;
 use once_cell::sync::Lazy;
 use regex::{Regex, RegexSet};
-
 use tokio::{
     fs::{self, File},
     io::AsyncWriteExt,
 };
 use tracing::{error, info_span, warn};
 use tracing_indicatif::span_ext::IndicatifSpanExt;
+
+use kemono_api::{reqwest, API};
 
 use crate::DONE;
 
