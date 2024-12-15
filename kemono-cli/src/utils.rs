@@ -1,4 +1,7 @@
-use std::{path::Path, sync::atomic::Ordering};
+use std::{
+    path::{Path, PathBuf},
+    sync::atomic::Ordering,
+};
 
 use anyhow::Result;
 use futures::StreamExt;
@@ -6,7 +9,10 @@ use kemono_api::API;
 use once_cell::sync::Lazy;
 use regex::{Regex, RegexSet};
 
-use tokio::{fs::File, io::AsyncWriteExt};
+use tokio::{
+    fs::{self, File},
+    io::AsyncWriteExt,
+};
 use tracing::{error, info_span, warn};
 use tracing_indicatif::span_ext::IndicatifSpanExt;
 
@@ -68,21 +74,39 @@ pub async fn download_single(api: API, url: &str, save_dir: &Path, file_name: &s
         }
     }
 
-    let resp = api.get_stream(url).await?;
-    if !resp.status().is_success() {
-        error!("failed to download {} status_code {:?}", url, resp.status());
-        return Ok(());
-    }
-
     let span = info_span!("download");
     span.pb_set_message(&format!("Downloading {}", file_name));
     span.pb_set_length(total_size);
     span.pb_start();
 
-    let mut file = File::create(&save_path).await?;
+    let partial_file_path = save_path.to_string_lossy() + ".incomplete";
+    let partial_file_path = PathBuf::from(partial_file_path.as_ref());
+
+    let mut file = match (partial_file_path.exists(), partial_file_path.is_file()) {
+        (true, false) => {
+            error!("partial_file_path existing as direcotry!");
+            return Ok(());
+        }
+        _ => {
+            File::options()
+                .append(true)
+                .create(true)
+                .open(&partial_file_path)
+                .await?
+        }
+    };
+
+    let start_pos = file.metadata().await?.len();
+    let mut pos = start_pos;
+
+    let resp = api.get_stream(url, start_pos).await?;
+    if !resp.status().is_success() {
+        error!("failed to download {} status_code {:?}", url, resp.status());
+        return Ok(());
+    }
+
     let mut stream = resp.bytes_stream();
 
-    let mut pos = 0;
     while let Some(item) = stream.next().await {
         let data = match item {
             Ok(d) => d,
@@ -104,6 +128,8 @@ pub async fn download_single(api: API, url: &str, save_dir: &Path, file_name: &s
         span.pb_set_position(pos);
     }
     file.flush().await?;
+    drop(file);
+    fs::rename(partial_file_path, save_path).await?;
 
     // workaround for tracing-indicatif deadlock bu
     // TODO: fix in upstream

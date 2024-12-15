@@ -16,17 +16,18 @@ impl API {
         let resp = self
             .client
             .head(url)
-            .header("referer", "https://kemono.su")
+            .header(reqwest::header::REFERER, "https://kemono.su")
             .send()
             .await?;
         Ok(resp)
     }
 
-    pub async fn get_stream(&self, url: &str) -> Result<reqwest::Response> {
+    pub async fn get_stream(&self, url: &str, start_pos: u64) -> Result<reqwest::Response> {
         let resp = self
             .client
             .get(url)
-            .header("referer", "https://kemono.su")
+            .header(reqwest::header::REFERER, "https://kemono.su")
+            .header(reqwest::header::RANGE, format!("bytes={start_pos}-"))
             .send()
             .await?;
         Ok(resp)
@@ -43,7 +44,7 @@ impl API {
             web_name, user_id
         );
         let mut req = self.client.get(&url).header(
-            "referer",
+            reqwest::header::REFERER,
             format!("https://kemono.su/{}/user/{}", web_name, user_id),
         );
 
@@ -77,7 +78,7 @@ impl API {
             .client
             .get(&url)
             .header(
-                "referer",
+                reqwest::header::REFERER,
                 format!(
                     "https://kemono.su/{}/user/{}/post/{}",
                     web_name, user_id, post_id
@@ -102,7 +103,7 @@ impl API {
             web_name, user_id
         );
         let req = self.client.get(&url).header(
-            "referer",
+            reqwest::header::REFERER,
             format!("https://kemono.su/{}/user/{}", web_name, user_id),
         );
 
