@@ -77,7 +77,7 @@ pub async fn download_single(api: API, url: &str, save_dir: &Path, file_name: &s
     let span = info_span!("download");
     span.pb_set_message(&format!("Downloading {}", file_name));
     span.pb_set_length(total_size);
-    let _enter = span.enter();
+    span.pb_start();
 
     let mut file = File::create(&save_path).await?;
     let mut stream = resp.bytes_stream();
@@ -108,7 +108,6 @@ pub async fn download_single(api: API, url: &str, save_dir: &Path, file_name: &s
     // workaround for tracing-indicatif deadlock bu
     // TODO: fix in upstream
     span.pb_finish_clear();
-    drop(_enter);
     drop(span);
     Ok(())
 }
