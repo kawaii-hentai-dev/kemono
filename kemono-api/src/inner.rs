@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-use crate::model::{post_info::PostInfo, posts_legacy::PostsLegacy};
+use crate::model::{post_info::PostInfo, posts_legacy::PostsLegacy, user_profile::UserProfile};
 
 #[derive(Default, Clone)]
 pub struct API {
@@ -85,6 +85,28 @@ impl API {
             )
             .send()
             .await?;
+        if !resp.status().is_success() {
+            return Err(anyhow::anyhow!(
+                "GET {} failed with status {}",
+                url,
+                resp.status()
+            ));
+        }
+        let val = resp.json().await?;
+        Ok(val)
+    }
+
+    pub async fn get_user_profile(&self, web_name: &str, user_id: &str) -> Result<UserProfile> {
+        let url = format!(
+            "https://kemono.su/api/v1/{}/user/{}/profile",
+            web_name, user_id
+        );
+        let req = self.client.get(&url).header(
+            "referer",
+            format!("https://kemono.su/{}/user/{}", web_name, user_id),
+        );
+
+        let resp = req.send().await?;
         if !resp.status().is_success() {
             return Err(anyhow::anyhow!(
                 "GET {} failed with status {}",

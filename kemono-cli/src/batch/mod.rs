@@ -3,6 +3,7 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use kemono_api::model::post_info::{AttachmentLike, PostInfo};
+use kemono_api::model::user_profile::UserProfile;
 use regex::RegexSet;
 use tokio::fs;
 use tokio::sync::Semaphore;
@@ -67,13 +68,15 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
                 previews,
             } = api.get_post_info(web_name, user_id, post_id).await?;
 
-            let mut save_path = output_dir.join(title);
+            let UserProfile { ref public_id, .. } = api.get_user_profile(web_name, user_id).await?;
+
+            let mut save_path = output_dir.join(public_id).join(title);
             if let Err(e) = fs::create_dir_all(&save_path).await {
                 let es = format!("{}", e);
                 if es.contains("267") || es.contains("Invalid argument") {
                     // 这就是 Windows .jpg
                     let new_title = clear_title_re.replace_all(title, "_");
-                    save_path = output_dir.join(new_title.as_ref());
+                    save_path = output_dir.join(public_id).join(new_title.as_ref());
                     fs::create_dir_all(&save_path).await?;
                 } else {
                     return Err(e.into());
