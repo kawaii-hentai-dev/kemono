@@ -4,3 +4,8 @@ resolver = "2"
 
 [patch.crates-io]
 tracing-indicatif = { git = "https://github.com/kawaii-hentai-dev/tracing-indicatif", branch = "feat-finish-clear" }
+
+[profile.release]
+lto = true
+strip = true
+codegen-units = 1
