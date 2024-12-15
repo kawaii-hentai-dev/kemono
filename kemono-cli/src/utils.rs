@@ -4,7 +4,7 @@ use std::{
 };
 
 use anyhow::Result;
-use futures::StreamExt;
+use futures_lite::StreamExt;
 use once_cell::sync::Lazy;
 use regex::{Regex, RegexSet};
 use tokio::{
