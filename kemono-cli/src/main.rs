@@ -16,7 +16,9 @@ use kemono_cli::{
 #[derive(Parser, Debug)]
 #[command(author, version, about = "Download tool")]
 struct Cli {
-    /// URL to fetch posts
+    /// kemono user URL to fetch posts
+    ///
+    /// Example: https://kemono.su/fanbox/user/4107959
     url: String,
     /// Output directory of fetched posts
     #[arg(long, default_value = "./download")]
