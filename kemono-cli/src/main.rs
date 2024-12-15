@@ -3,9 +3,9 @@ use std::{fs, path::PathBuf, sync::atomic::Ordering};
 use anyhow::Result;
 use clap::Parser;
 use indicatif::ProgressStyle;
-use tracing::{error, info, level_filters::LevelFilter, Level};
+use tracing::{error, info, level_filters::LevelFilter};
 use tracing_indicatif::IndicatifLayer;
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, Layer};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer};
 
 use kemono_cli::{
     batch::{ctx::Args, download_loop},
@@ -68,7 +68,11 @@ async fn main() -> Result<()> {
             tracing_subscriber::fmt::layer()
                 .with_level(true)
                 .with_writer(indicatif_layer.get_stderr_writer())
-                .with_filter(LevelFilter::from_level(Level::INFO)),
+                .with_filter(
+                    EnvFilter::builder()
+                        .with_default_directive(LevelFilter::INFO.into())
+                        .from_env_lossy(),
+                ),
         )
         .with(indicatif_layer)
         .init();

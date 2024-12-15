@@ -7,7 +7,7 @@ use once_cell::sync::Lazy;
 use regex::{Regex, RegexSet};
 
 use tokio::{fs::File, io::AsyncWriteExt};
-use tracing::{error, info, info_span, warn};
+use tracing::{error, info_span, warn};
 use tracing_indicatif::span_ext::IndicatifSpanExt;
 
 use crate::DONE;
@@ -110,6 +110,5 @@ pub async fn download_single(api: API, url: &str, save_dir: &Path, file_name: &s
     span.pb_finish_clear();
     drop(_enter);
     drop(span);
-    info!("Completed {file_name}");
     Ok(())
 }

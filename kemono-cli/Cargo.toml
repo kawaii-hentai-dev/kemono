@@ -21,10 +21,9 @@ indicatif = "0.17"
 
 tracing = { version = "0.1.40" }
 tracing-durations-export = { version = "0.3.0", features = ["plot"] }
-tracing-subscriber = { version = "0.3.18", features = [
-    "env-filter",
-    "json",
+tracing-subscriber = { version = "0.3.18", default-features = false, features = [
     "registry",
+    "env-filter",
 ] }
 tracing-tree = { version = "0.4.0" }
 tracing-indicatif = "0.3.8"
