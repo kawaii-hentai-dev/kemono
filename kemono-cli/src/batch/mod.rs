@@ -89,18 +89,9 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
 
             let dirname = public_id.as_deref().unwrap_or(user_id);
 
-            let mut save_path = output_dir.join(dirname).join(title);
-            if let Err(e) = fs::create_dir_all(&save_path).await {
-                let es = format!("{}", e);
-                if es.contains("267") || es.contains("Invalid argument") {
-                    // 这就是 Windows .jpg
-                    let new_title = clear_title_re.replace_all(title, "_");
-                    save_path = output_dir.join(dirname).join(new_title.as_ref());
-                    fs::create_dir_all(&save_path).await?;
-                } else {
-                    return Err(e.into());
-                }
-            }
+            let title = clear_title_re.replace_all(title, "_");
+            let save_path = output_dir.join(dirname).join(title.as_ref());
+            fs::create_dir_all(&save_path).await?;
 
             let metadata_path = save_path.join("metadata.json");
             fs::write(
