@@ -83,15 +83,19 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
                     .await
                     .map_err(|e| anyhow::anyhow!("failed to get user profile: {e}"))?;
 
-            info!("user ({user_id}): {public_id}");
+            if let Some(public_id) = public_id {
+                info!("user ({user_id}): {public_id}");
+            }
 
-            let mut save_path = output_dir.join(public_id).join(title);
+            let dirname = public_id.as_deref().unwrap_or(user_id);
+
+            let mut save_path = output_dir.join(dirname).join(title);
             if let Err(e) = fs::create_dir_all(&save_path).await {
                 let es = format!("{}", e);
                 if es.contains("267") || es.contains("Invalid argument") {
                     // 这就是 Windows .jpg
                     let new_title = clear_title_re.replace_all(title, "_");
-                    save_path = output_dir.join(public_id).join(new_title.as_ref());
+                    save_path = output_dir.join(dirname).join(new_title.as_ref());
                     fs::create_dir_all(&save_path).await?;
                 } else {
                     return Err(e.into());

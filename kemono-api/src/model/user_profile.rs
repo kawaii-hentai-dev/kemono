@@ -6,5 +6,5 @@ pub struct UserProfile {
     pub id: String,
     pub name: String,
     pub service: String,
-    pub public_id: String,
+    pub public_id: Option<String>,
 }
