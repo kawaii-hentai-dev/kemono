@@ -7,7 +7,7 @@ use kemono_api::model::user_profile::UserProfile;
 use regex::RegexSet;
 use tokio::fs;
 use tokio::sync::Semaphore;
-use tracing::{error, info, warn};
+use tracing::{debug, error, info, trace, warn};
 
 use kemono_api::model::posts_legacy::{PostsLegacy, Props, Result as PLResult};
 use kemono_api::API;
@@ -46,7 +46,12 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
         let PostsLegacy {
             props: Props { count, limit },
             results,
-        } = api.get_posts_legacy(web_name, user_id, offset).await?;
+        } = api
+            .get_posts_legacy(web_name, user_id, offset)
+            .await
+            .map_err(|e| anyhow::anyhow!("failed to fetch props: {e}"))?;
+
+        debug!("count: {count}, limit: {limit}");
 
         for PLResult {
             id: ref post_id,
@@ -66,9 +71,19 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
                 post,
                 attachments,
                 previews,
-            } = api.get_post_info(web_name, user_id, post_id).await?;
+            } = api
+                .get_post_info(web_name, user_id, post_id)
+                .await
+                .map_err(|e| anyhow::anyhow!("failed to get post info: {e}"))?;
 
-            let UserProfile { ref public_id, .. } = api.get_user_profile(web_name, user_id).await?;
+            trace!("post: {post:?}");
+
+            let UserProfile { ref public_id, .. } =
+                api.get_user_profile(web_name, user_id)
+                    .await
+                    .map_err(|e| anyhow::anyhow!("failed to get user profile: {e}"))?;
+
+            info!("user ({user_id}): {public_id}");
 
             let mut save_path = output_dir.join(public_id).join(title);
             if let Err(e) = fs::create_dir_all(&save_path).await {

@@ -120,7 +120,9 @@ async fn main() -> Result<()> {
         .whitelist_filename_regexes(whitelist_filename_regex)
         .blacklist_filename_regexes(blacklist_filename_regex)
         .build()?;
-    download_loop(&args).await?;
+    if let Err(e) = download_loop(&args).await {
+        error!("{e}");
+    }
 
     info!("Task Exit");
 
