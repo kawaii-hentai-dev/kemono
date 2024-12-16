@@ -36,7 +36,7 @@ pub fn whiteblack_regex_filter(white: &RegexSet, black: &RegexSet, heytrack: &st
     let black_matched = black.matches(heytrack).matched_all();
 
     match (white_matched, black_matched) {
-        _ if white.is_empty() && white.is_empty() => true,
+        _ if white.is_empty() && black.is_empty() => true,
         _ if black.is_empty() => white_matched,
         _ if white.is_empty() => !black_matched,
         (true, false) => true,
