@@ -54,7 +54,11 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
 
         debug!("count: {count}, limit: {limit}");
 
-        let UserProfile { ref public_id, .. } = api
+        let UserProfile {
+            ref public_id,
+            ref name,
+            ..
+        } = api
             .get_user_profile(web_name, user_id)
             .await
             .map_err(|e| anyhow::anyhow!("failed to get user profile: {e}"))?;
@@ -63,7 +67,8 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
             info!("user ({user_id}): {public_id}");
         }
 
-        let dirname = public_id.as_deref().unwrap_or(user_id);
+        let dirname = public_id.as_deref().unwrap_or(name);
+        let dirname = clear_title_re.replace_all(dirname, "_");
 
         for PLResult {
             id: ref post_id,
@@ -91,7 +96,7 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
             trace!("post: {post:?}");
 
             let title = clear_title_re.replace_all(title, "_");
-            let save_path = output_dir.join(dirname).join(title.as_ref());
+            let save_path = output_dir.join(dirname.as_ref()).join(title.as_ref());
             fs::create_dir_all(&save_path).await?;
 
             let metadata_path = save_path.join("metadata.json");
