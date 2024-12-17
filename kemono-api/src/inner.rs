@@ -39,13 +39,10 @@ impl API {
         user_id: &str,
         offset: usize,
     ) -> Result<PostsLegacy> {
-        let url = format!(
-            "https://kemono.su/api/v1/{}/user/{}/posts-legacy",
-            web_name, user_id
-        );
+        let url = format!("https://kemono.su/api/v1/{web_name}/user/{user_id}/posts-legacy",);
         let mut req = self.client.get(&url).header(
             reqwest::header::REFERER,
-            format!("https://kemono.su/{}/user/{}", web_name, user_id),
+            format!("https://kemono.su/{web_name}/user/{user_id}"),
         );
 
         if offset > 0 {
@@ -54,11 +51,8 @@ impl API {
 
         let resp = req.send().await?;
         if !resp.status().is_success() {
-            return Err(anyhow::anyhow!(
-                "GET {} failed with status {}",
-                url,
-                resp.status()
-            ));
+            let status = resp.status();
+            return Err(anyhow::anyhow!("GET {url} failed with status {status}",));
         }
         let val = resp.json().await?;
         Ok(val)
@@ -70,50 +64,35 @@ impl API {
         user_id: &str,
         post_id: &str,
     ) -> Result<PostInfo> {
-        let url = format!(
-            "https://kemono.su/api/v1/{}/user/{}/post/{}",
-            web_name, user_id, post_id
-        );
+        let url = format!("https://kemono.su/api/v1/{web_name}/user/{user_id}/post/{post_id}");
         let resp = self
             .client
             .get(&url)
             .header(
                 reqwest::header::REFERER,
-                format!(
-                    "https://kemono.su/{}/user/{}/post/{}",
-                    web_name, user_id, post_id
-                ),
+                format!("https://kemono.su/{web_name}/user/{user_id}/post/{post_id}"),
             )
             .send()
             .await?;
         if !resp.status().is_success() {
-            return Err(anyhow::anyhow!(
-                "GET {} failed with status {}",
-                url,
-                resp.status()
-            ));
+            let status = resp.status();
+            return Err(anyhow::anyhow!("GET {url} failed with status {status}",));
         }
         let val = resp.json().await?;
         Ok(val)
     }
 
     pub async fn get_user_profile(&self, web_name: &str, user_id: &str) -> Result<UserProfile> {
-        let url = format!(
-            "https://kemono.su/api/v1/{}/user/{}/profile",
-            web_name, user_id
-        );
+        let url = format!("https://kemono.su/api/v1/{web_name}/user/{user_id}/profile",);
         let req = self.client.get(&url).header(
             reqwest::header::REFERER,
-            format!("https://kemono.su/{}/user/{}", web_name, user_id),
+            format!("https://kemono.su/{web_name}/user/{user_id}"),
         );
 
         let resp = req.send().await?;
         if !resp.status().is_success() {
-            return Err(anyhow::anyhow!(
-                "GET {} failed with status {}",
-                url,
-                resp.status()
-            ));
+            let status = resp.status();
+            return Err(anyhow::anyhow!("GET {url} failed with status {status}",));
         }
         let val = resp.json().await?;
         Ok(val)
