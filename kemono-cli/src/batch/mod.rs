@@ -21,6 +21,7 @@ pub mod ctx;
 pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
     let web_name = ctx.web_name();
     let user_id = ctx.user_id();
+    let base_url = ctx.api_base_url();
     let max_concurrency = ctx.max_concurrency();
     let output_dir = ctx.output_dir();
     let whitelist_regex = ctx.whitelist_regexes();
@@ -34,7 +35,7 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
     let whitelist_filename_regex = RegexSet::new(whitelist_filename_regex)?;
     let blacklist_filename_regex = RegexSet::new(blacklist_filename_regex)?;
 
-    let api = API::new();
+    let api = API::try_with_base_url(base_url)?;
     let mut offset = 0;
 
     // 替换特殊字串符

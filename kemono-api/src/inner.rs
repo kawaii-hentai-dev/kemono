@@ -1,32 +1,46 @@
 use anyhow::Result;
+use reqwest::{Client, Url};
 
 use crate::model::{post_info::PostInfo, posts_legacy::PostsLegacy, user_profile::UserProfile};
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
 pub struct API {
-    client: reqwest::Client,
+    client: Client,
+    base_url: Url,
 }
 
 impl API {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn try_new() -> Result<Self> {
+        Ok(API {
+            client: Client::default(),
+            base_url: Url::parse("https://kemono.su")?,
+        })
+    }
+
+    pub fn try_with_base_url(base_url: impl AsRef<str>) -> Result<Self> {
+        Ok(API {
+            client: Client::default(),
+            base_url: Url::parse(base_url.as_ref())?,
+        })
     }
 
     pub async fn head(&self, url: &str) -> Result<reqwest::Response> {
+        let base_url = &self.base_url;
         let resp = self
             .client
             .head(url)
-            .header(reqwest::header::REFERER, "https://kemono.su")
+            .header(reqwest::header::REFERER, base_url.as_str())
             .send()
             .await?;
         Ok(resp)
     }
 
     pub async fn get_stream(&self, url: &str, start_pos: u64) -> Result<reqwest::Response> {
+        let base_url = &self.base_url;
         let resp = self
             .client
             .get(url)
-            .header(reqwest::header::REFERER, "https://kemono.su")
+            .header(reqwest::header::REFERER, base_url.as_str())
             .header(reqwest::header::RANGE, format!("bytes={start_pos}-"))
             .send()
             .await?;
@@ -39,10 +53,11 @@ impl API {
         user_id: &str,
         offset: usize,
     ) -> Result<PostsLegacy> {
-        let url = format!("https://kemono.su/api/v1/{web_name}/user/{user_id}/posts-legacy",);
+        let base_url = &self.base_url;
+        let url = format!("{base_url}/api/v1/{web_name}/user/{user_id}/posts-legacy",);
         let mut req = self.client.get(&url).header(
             reqwest::header::REFERER,
-            format!("https://kemono.su/{web_name}/user/{user_id}"),
+            format!("{base_url}/{web_name}/user/{user_id}"),
         );
 
         if offset > 0 {
@@ -64,13 +79,14 @@ impl API {
         user_id: &str,
         post_id: &str,
     ) -> Result<PostInfo> {
-        let url = format!("https://kemono.su/api/v1/{web_name}/user/{user_id}/post/{post_id}");
+        let base_url = &self.base_url;
+        let url = format!("{base_url}/api/v1/{web_name}/user/{user_id}/post/{post_id}");
         let resp = self
             .client
             .get(&url)
             .header(
                 reqwest::header::REFERER,
-                format!("https://kemono.su/{web_name}/user/{user_id}/post/{post_id}"),
+                format!("{base_url}/{web_name}/user/{user_id}/post/{post_id}"),
             )
             .send()
             .await?;
@@ -83,10 +99,11 @@ impl API {
     }
 
     pub async fn get_user_profile(&self, web_name: &str, user_id: &str) -> Result<UserProfile> {
-        let url = format!("https://kemono.su/api/v1/{web_name}/user/{user_id}/profile",);
+        let base_url = &self.base_url;
+        let url = format!("{base_url}/api/v1/{web_name}/user/{user_id}/profile",);
         let req = self.client.get(&url).header(
             reqwest::header::REFERER,
-            format!("https://kemono.su/{web_name}/user/{user_id}"),
+            format!("{base_url}/{web_name}/user/{user_id}"),
         );
 
         let resp = req.send().await?;

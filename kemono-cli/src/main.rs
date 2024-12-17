@@ -51,6 +51,10 @@ struct Cli {
     /// Specify multiple times means 'AND' semantic
     #[arg(long, short = 'B')]
     blacklist_filename_regex: Vec<String>,
+
+    /// Switch to coomer.su endpoint
+    #[arg(long, default_value_t = false)]
+    coomer: bool,
 }
 
 #[tokio::main]
@@ -89,6 +93,7 @@ async fn main() -> Result<()> {
         blacklist_regex,
         whitelist_filename_regex,
         blacklist_filename_regex,
+        coomer,
     } = Cli::parse();
 
     let (Some(web_name), Some(user_id)) = extract_info(&url) else {
@@ -119,6 +124,14 @@ async fn main() -> Result<()> {
         .blacklist_regexes(blacklist_regex)
         .whitelist_filename_regexes(whitelist_filename_regex)
         .blacklist_filename_regexes(blacklist_filename_regex)
+        .api_base_url(
+            if coomer {
+                "https://coomer.su"
+            } else {
+                "https://kemono.su"
+            }
+            .into(),
+        )
         .build()?;
     if let Err(e) = download_loop(&args).await {
         error!("{e}");

@@ -11,6 +11,10 @@ pub trait Context<'a> {
     fn blacklist_regexes(&self) -> impl Iterator<Item = &'a str>;
     fn whitelist_filename_regexes(&self) -> impl Iterator<Item = &'a str>;
     fn blacklist_filename_regexes(&self) -> impl Iterator<Item = &'a str>;
+    /// Base url of the kemono-compatible API.
+    ///
+    /// Example: https://kemono.su, https://coomer.su
+    fn api_base_url(&self) -> &'a str;
 }
 
 #[derive(Clone, Builder, PartialEq, Eq, Default)]
@@ -27,6 +31,8 @@ pub struct Args {
     whitelist_filename_regexes: Vec<String>,
     #[builder(default = "Vec::new()")]
     blacklist_filename_regexes: Vec<String>,
+    #[builder(default = "String::from(\"https://kemono.su\")")]
+    api_base_url: String,
 }
 
 impl Args {
@@ -66,5 +72,9 @@ impl<'a> Context<'a> for &'a Args {
 
     fn blacklist_filename_regexes(&self) -> impl Iterator<Item = &'a str> {
         self.blacklist_filename_regexes.iter().map(String::as_str)
+    }
+
+    fn api_base_url(&self) -> &'a str {
+        &self.api_base_url
     }
 }
