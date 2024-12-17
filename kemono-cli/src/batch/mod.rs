@@ -54,6 +54,17 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
 
         debug!("count: {count}, limit: {limit}");
 
+        let UserProfile { ref public_id, .. } = api
+            .get_user_profile(web_name, user_id)
+            .await
+            .map_err(|e| anyhow::anyhow!("failed to get user profile: {e}"))?;
+
+        if let Some(public_id) = public_id {
+            info!("user ({user_id}): {public_id}");
+        }
+
+        let dirname = public_id.as_deref().unwrap_or(user_id);
+
         for PLResult {
             id: ref post_id,
             ref title,
@@ -79,17 +90,6 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
 
             trace!("post: {post:?}");
 
-            let UserProfile { ref public_id, .. } =
-                api.get_user_profile(web_name, user_id)
-                    .await
-                    .map_err(|e| anyhow::anyhow!("failed to get user profile: {e}"))?;
-
-            if let Some(public_id) = public_id {
-                info!("user ({user_id}): {public_id}");
-            }
-
-            let dirname = public_id.as_deref().unwrap_or(user_id);
-
             let title = clear_title_re.replace_all(title, "_");
             let save_path = output_dir.join(dirname).join(title.as_ref());
             fs::create_dir_all(&save_path).await?;
@@ -105,7 +105,7 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
 
             let mut set = HashSet::with_capacity(attachments.len() + previews.len());
 
-            info!("Downloading attachments from {title}");
+            info!("{title} start");
             for attach in attachments.iter().chain(previews.iter()) {
                 if DONE.load(Ordering::Relaxed) {
                     break;
@@ -136,7 +136,7 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
                 }
 
                 let file_url = format!("{}/data{}", file_server, file_path);
-                info!("Downloading file from {}", file_name);
+                info!("Downloading {}", file_name);
 
                 let api = api.clone();
                 let sem = Arc::clone(&semaphore);
