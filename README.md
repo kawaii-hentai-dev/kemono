@@ -63,7 +63,7 @@ Options:
 1. Download 4k videos, with title starts with `Melody x Lawa`
 
 ```bash
-cargo run -r -- https://kemono.su/patreon/user/49965584 -w "Melody x Lawa" -W "\.mp4$" -W "4K"
+kemono-cli https://kemono.su/patreon/user/49965584 -w "Melody x Lawa" -W "\.mp4$" -W "4K"
 ```
 
 ```text
@@ -110,4 +110,10 @@ download/ViciNeko
 └── Melody x Lawa - Welcome To The Show! ❤(˵^ ◡ ^˵)❤ - WIP
     ├── metadata.json
     └── MxL_WIP_Scene1_WelcomeToTheShow_4K_h265.mp4
+```
+
+2. Download videos of HongkongDoll from coomer.su
+
+```bash
+kemono-cli https://coomer.su/onlyfans/user/hongkongdoll -W "\.(mp4|m4v)$" --coomer
 ```
