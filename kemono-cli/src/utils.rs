@@ -3,10 +3,9 @@ use std::{
     sync::atomic::Ordering,
 };
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use futures_lite::StreamExt;
-use once_cell::sync::Lazy;
-use regex::{Regex, RegexSet};
+use regex::RegexSet;
 use tokio::{
     fs::{self, File},
     io::AsyncWriteExt,
@@ -14,20 +13,30 @@ use tokio::{
 use tracing::{info, info_span, warn};
 use tracing_indicatif::span_ext::IndicatifSpanExt;
 
-use kemono_api::{reqwest, API};
+use kemono_api::{
+    reqwest::{self, Url},
+    API,
+};
 
 use crate::DONE;
 
 /// 提取 web_name 和 user_id
-pub fn extract_info(url: &str) -> (Option<String>, Option<String>) {
-    static RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"https://[^/]+/([^/]+)/user/(\d+)").unwrap());
-    if let Some(caps) = RE.captures(url) {
-        let web_name = caps.get(1).map(|m| m.as_str().to_string());
-        let user_id = caps.get(2).map(|m| m.as_str().to_string());
-        (web_name, user_id)
-    } else {
-        (None, None)
+pub fn extract_info(url: &str) -> Result<(String, String)> {
+    let url = Url::parse(url)?;
+    let mut segments = url
+        .path_segments()
+        .ok_or_else(|| anyhow!("error: please provide an url with base"))?;
+    let web_name = segments
+        .next()
+        .ok_or_else(|| anyhow!("web_name not found in url"))?;
+    if segments.next() != Some("user") {
+        anyhow::bail!("wrong url: https://.../<web_name>/user/<user_id>");
     }
+    let user_id = segments
+        .next()
+        .ok_or_else(|| anyhow!("user_id not found in url"))?;
+
+    Ok((web_name.into(), user_id.into()))
 }
 
 /// Returns true if passed check

@@ -96,10 +96,7 @@ async fn main() -> Result<()> {
         coomer,
     } = Cli::parse();
 
-    let (Some(web_name), Some(user_id)) = extract_info(&url) else {
-        error!("URL Error: cannot parse web_name and user_id");
-        return Ok(());
-    };
+    let (web_name, user_id) = extract_info(&url)?;
 
     info!("Download URL: {}", &url);
 

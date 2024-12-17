@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use kemono_api::model::post_info::{AttachmentLike, PostInfo};
 use kemono_api::model::user_profile::UserProfile;
 use regex::RegexSet;
@@ -51,7 +51,7 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
         } = api
             .get_posts_legacy(web_name, user_id, offset)
             .await
-            .map_err(|e| anyhow::anyhow!("failed to fetch props: {e}"))?;
+            .map_err(|e| anyhow!("failed to fetch props: {e}"))?;
 
         debug!("count: {count}, limit: {limit}");
 
@@ -62,7 +62,7 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
         } = api
             .get_user_profile(web_name, user_id)
             .await
-            .map_err(|e| anyhow::anyhow!("failed to get user profile: {e}"))?;
+            .map_err(|e| anyhow!("failed to get user profile: {e}"))?;
 
         if let Some(public_id) = public_id {
             info!("user ({user_id}): {public_id}");
@@ -98,7 +98,7 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
             } = api
                 .get_post_info(web_name, user_id, post_id)
                 .await
-                .map_err(|e| anyhow::anyhow!("failed to get post info: {e}"))?;
+                .map_err(|e| anyhow!("failed to get post info: {e}"))?;
 
             trace!("post: {post:?}");
 

@@ -837,7 +837,6 @@ dependencies = [
  "futures-lite",
  "indicatif",
  "kemono-api",
- "once_cell",
  "regex",
  "tokio",
  "tracing",
