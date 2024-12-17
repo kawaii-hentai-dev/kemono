@@ -85,7 +85,8 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
                 continue;
             }
 
-            let mut title = title;
+            // workaround for win32 API
+            let mut title = title.trim();
             if title.is_empty() {
                 title = post_id;
             }
