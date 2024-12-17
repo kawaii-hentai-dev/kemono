@@ -145,13 +145,8 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
                 let furl = file_url.clone();
                 let fut = async move {
                     let _permit = sem.acquire().await;
-                    match download_single(api, &furl, &sp, &fname).await {
-                        Ok(()) => {
-                            info!("Completed downloading {fname}");
-                        }
-                        Err(e) => {
-                            error!("Error downloading {fname}: {e:?}");
-                        }
+                    if let Err(e) = download_single(api, &furl, &sp, &fname).await {
+                        error!("Error downloading {fname}: {e:?}");
                     }
                 };
                 futures.push(tokio::spawn(fut));

@@ -11,7 +11,7 @@ use tokio::{
     fs::{self, File},
     io::AsyncWriteExt,
 };
-use tracing::{error, info_span, warn};
+use tracing::{info, info_span, warn};
 use tracing_indicatif::span_ext::IndicatifSpanExt;
 
 use kemono_api::{reqwest, API};
@@ -52,12 +52,11 @@ pub async fn download_single(api: API, url: &str, save_dir: &Path, file_name: &s
 
     let head_resp = api.head(url).await?;
     if !head_resp.status().is_success() {
-        error!(
+        anyhow::bail!(
             "failed to download {} status_code {:?}",
             url,
             head_resp.status()
         );
-        return Ok(());
     }
     let total_size = head_resp
         .headers()
@@ -84,8 +83,7 @@ pub async fn download_single(api: API, url: &str, save_dir: &Path, file_name: &s
 
     let mut file = match (partial_file_path.exists(), partial_file_path.is_file()) {
         (true, false) => {
-            error!("partial_file_path existing as direcotry!");
-            return Ok(());
+            anyhow::bail!("partial_file_path existing as direcotry!");
         }
         _ => {
             File::options()
@@ -101,8 +99,7 @@ pub async fn download_single(api: API, url: &str, save_dir: &Path, file_name: &s
 
     let resp = api.get_stream(url, start_pos).await?;
     if !resp.status().is_success() {
-        error!("failed to download {} status_code {:?}", url, resp.status());
-        return Ok(());
+        anyhow::bail!("failed to download {} status_code {:?}", url, resp.status());
     }
 
     let mut stream = resp.bytes_stream();
@@ -118,7 +115,6 @@ pub async fn download_single(api: API, url: &str, save_dir: &Path, file_name: &s
 
         if DONE.load(Ordering::Relaxed) {
             drop(file);
-            tokio::fs::remove_file(&save_path).await.ok();
             return Ok(());
         }
 
@@ -135,5 +131,7 @@ pub async fn download_single(api: API, url: &str, save_dir: &Path, file_name: &s
     // TODO: fix in upstream
     span.pb_finish_clear();
     drop(span);
+
+    info!("Completed downloading {file_name}");
     Ok(())
 }
