@@ -9,17 +9,19 @@ pub struct API {
     base_url: Url,
 }
 
+const USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36 GLS/100.10.9939.100";
+
 impl API {
     pub fn try_new() -> Result<Self> {
         Ok(API {
-            client: Client::default(),
+            client: Client::builder().user_agent(USER_AGENT).build()?,
             base_url: Url::parse("https://kemono.su")?,
         })
     }
 
     pub fn try_with_base_url(base_url: impl AsRef<str>) -> Result<Self> {
         Ok(API {
-            client: Client::default(),
+            client: Client::builder().user_agent(USER_AGENT).build()?,
             base_url: Url::parse(base_url.as_ref())?,
         })
     }
