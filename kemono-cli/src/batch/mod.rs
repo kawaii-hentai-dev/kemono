@@ -85,6 +85,11 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
                 continue;
             }
 
+            let mut title = title;
+            if title.is_empty() {
+                title = post_id;
+            }
+
             let PostInfo {
                 post,
                 attachments,
