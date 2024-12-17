@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 
@@ -102,6 +103,8 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
 
             let mut futures = Vec::new();
 
+            let mut set = HashSet::with_capacity(attachments.len() + previews.len());
+
             info!("Downloading attachments from {title}");
             for attach in attachments.iter().chain(previews.iter()) {
                 if DONE.load(Ordering::Relaxed) {
@@ -117,6 +120,11 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
                     warn!("missing field in attach {attach:?}");
                     continue;
                 };
+
+                if !set.insert(file_name) {
+                    warn!("skipped duplicated file: {file_name}");
+                    continue;
+                }
 
                 if !whiteblack_regex_filter(
                     &whitelist_filename_regex,
