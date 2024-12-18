@@ -10,7 +10,7 @@ use tokio::{
     fs::{self, File},
     io::AsyncWriteExt,
 };
-use tracing::{info, info_span, warn};
+use tracing::{info, warn, Span};
 use tracing_indicatif::span_ext::IndicatifSpanExt;
 
 use kemono_api::{
@@ -53,6 +53,7 @@ pub fn whiteblack_regex_filter(white: &RegexSet, black: &RegexSet, heytrack: &st
     }
 }
 
+#[tracing::instrument]
 pub async fn download_single(api: API, url: &str, save_dir: &Path, file_name: &str) -> Result<()> {
     if DONE.load(Ordering::Relaxed) {
         return Ok(());
@@ -82,10 +83,9 @@ pub async fn download_single(api: API, url: &str, save_dir: &Path, file_name: &s
         }
     }
 
-    let span = info_span!("download");
-    span.pb_set_message(&format!("Downloading {}", file_name));
-    span.pb_set_length(total_size);
-    span.pb_start();
+    Span::current().pb_set_message(&format!("Downloading {}", file_name));
+    Span::current().pb_set_length(total_size);
+    Span::current().pb_start();
 
     let partial_file_path = save_path.to_string_lossy() + ".incomplete";
     let partial_file_path = PathBuf::from(partial_file_path.as_ref());
@@ -130,16 +130,11 @@ pub async fn download_single(api: API, url: &str, save_dir: &Path, file_name: &s
         file.write_all(&data).await?;
         let len = data.len() as u64;
         pos += len;
-        span.pb_set_position(pos);
+        Span::current().pb_set_position(pos);
     }
     file.flush().await?;
     drop(file);
     fs::rename(partial_file_path, save_path).await?;
-
-    // workaround for tracing-indicatif deadlock bu
-    // TODO: fix in upstream
-    span.pb_finish_clear();
-    drop(span);
 
     info!("Completed downloading {file_name}");
     Ok(())

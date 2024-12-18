@@ -1567,7 +1567,8 @@ dependencies = [
 [[package]]
 name = "tracing-indicatif"
 version = "0.3.8"
-source = "git+https://github.com/kawaii-hentai-dev/tracing-indicatif?branch=feat-finish-clear#41e5c7670a58a072545155a3b03b50348769c693"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "74ba258e9de86447f75edf6455fded8e5242704c6fccffe7bf8d7fb6daef1180"
 dependencies = [
  "indicatif",
  "tracing",

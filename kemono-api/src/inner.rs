@@ -3,7 +3,7 @@ use reqwest::{Client, Url};
 
 use crate::model::{post_info::PostInfo, posts_legacy::PostsLegacy, user_profile::UserProfile};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct API {
     client: Client,
     base_url: Url,
