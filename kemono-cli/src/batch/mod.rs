@@ -102,12 +102,15 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
 
             let title = normalize_pathname(title);
             let save_path = output_dir.join(dirname.as_str()).join(title.as_str());
+            debug!("save_path: {}", save_path.to_string_lossy());
             if let Err(e) = fs::create_dir_all(&save_path).await {
                 error!("failed to create save_path: {e}");
                 return Ok(());
             };
 
             let metadata_path = save_path.join("metadata.json");
+            debug!("metadata_path: {}", metadata_path.to_string_lossy());
+
             if let Err(e) = fs::write(
                 metadata_path,
                 kemono_api::serde_json::to_string_pretty(&post)?,

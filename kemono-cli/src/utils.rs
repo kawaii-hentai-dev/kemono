@@ -1,11 +1,11 @@
 use std::{
     path::{Path, PathBuf},
-    sync::{atomic::Ordering, OnceLock},
+    sync::atomic::Ordering,
 };
 
 use anyhow::{anyhow, Result};
 use futures_lite::StreamExt;
-use regex::{Regex, RegexSet};
+use regex::RegexSet;
 use tokio::{
     fs::{self, File},
     io::AsyncWriteExt,
@@ -40,10 +40,14 @@ pub fn extract_info(url: &str) -> Result<(String, String)> {
 }
 
 pub fn normalize_pathname<'a>(s: &'a str) -> String {
-    static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r#"[\\/:*?"<>|\n\r]"#).expect("invalid regex"))
-        .replace_all(s, "_")
-        .replace(|ch| unic_emoji_char::is_emoji(ch), "_")
+    let specials = "\\/:*?\"<>|\n\r";
+    let result = s
+        .replace(
+            |ch: char| !ch.is_alphanumeric() && !ch.is_ascii_graphic() && !ch.is_ascii_whitespace(),
+            "_",
+        )
+        .replace(|ch| specials.contains(ch), "_");
+    result.trim_end_matches('.').into()
 }
 
 /// Returns true if passed check
