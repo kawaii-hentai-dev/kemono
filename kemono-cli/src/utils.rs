@@ -68,12 +68,7 @@ pub fn extract_info(url: &str) -> Result<DownloadInfo> {
 
 pub fn normalize_pathname<'a>(s: &'a str) -> String {
     let specials = "\\/:*?\"<>|\n\r";
-    let result = s
-        .replace(
-            |ch: char| !ch.is_alphanumeric() && !ch.is_ascii_graphic() && !ch.is_ascii_whitespace(),
-            "_",
-        )
-        .replace(|ch| specials.contains(ch), "_");
+    let result = s.replace(|ch| specials.contains(ch), "_");
     result.trim_end_matches('.').into()
 }
 
