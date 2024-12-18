@@ -104,14 +104,21 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
 
             let title = clear_title_re.replace_all(title, "_");
             let save_path = output_dir.join(dirname.as_ref()).join(title.as_ref());
-            fs::create_dir_all(&save_path).await?;
+            if let Err(e) = fs::create_dir_all(&save_path).await {
+                error!("failed to create save_path: {e}");
+                return Ok(());
+            };
 
             let metadata_path = save_path.join("metadata.json");
-            fs::write(
+            if let Err(e) = fs::write(
                 metadata_path,
                 kemono_api::serde_json::to_string_pretty(&post)?,
             )
-            .await?;
+            .await
+            {
+                error!("failed to write metadata: {e}");
+                return Ok(());
+            };
 
             let mut futures = Vec::new();
 
