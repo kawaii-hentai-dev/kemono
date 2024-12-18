@@ -13,7 +13,7 @@ use tracing::{debug, error, info, trace, warn};
 use kemono_api::model::posts_legacy::{PostsLegacy, Props, Result as PLResult};
 use kemono_api::API;
 
-use crate::utils::{download_single, whiteblack_regex_filter};
+use crate::utils::{download_single, normalize_pathname, whiteblack_regex_filter};
 use crate::DONE;
 
 pub mod ctx;
@@ -38,8 +38,6 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
     let api = API::try_with_base_url(base_url)?;
     let mut offset = 0;
 
-    // 替换特殊字串符
-    let clear_title_re = regex::Regex::new(r#"[\\/:*?"<>|\n\r]"#)?;
     loop {
         if DONE.load(Ordering::Relaxed) {
             break;
@@ -69,7 +67,7 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
         }
 
         let dirname = public_id.as_deref().unwrap_or(name);
-        let dirname = clear_title_re.replace_all(dirname, "_");
+        let dirname = normalize_pathname(dirname);
 
         for PLResult {
             id: ref post_id,
@@ -102,8 +100,8 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
 
             trace!("post: {post:?}");
 
-            let title = clear_title_re.replace_all(title, "_");
-            let save_path = output_dir.join(dirname.as_ref()).join(title.as_ref());
+            let title = normalize_pathname(title);
+            let save_path = output_dir.join(dirname.as_str()).join(title.as_str());
             if let Err(e) = fs::create_dir_all(&save_path).await {
                 error!("failed to create save_path: {e}");
                 return Ok(());

@@ -1,11 +1,11 @@
 use std::{
     path::{Path, PathBuf},
-    sync::atomic::Ordering,
+    sync::{atomic::Ordering, OnceLock},
 };
 
 use anyhow::{anyhow, Result};
 use futures_lite::StreamExt;
-use regex::RegexSet;
+use regex::{Regex, RegexSet};
 use tokio::{
     fs::{self, File},
     io::AsyncWriteExt,
@@ -37,6 +37,13 @@ pub fn extract_info(url: &str) -> Result<(String, String)> {
         .ok_or_else(|| anyhow!("user_id not found in url"))?;
 
     Ok((web_name.into(), user_id.into()))
+}
+
+pub fn normalize_pathname<'a>(s: &'a str) -> String {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r#"[\\/:*?"<>|\n\r]"#).expect("invalid regex"))
+        .replace_all(s, "_")
+        .replace(|ch| unic_emoji_char::is_emoji(ch), "_")
 }
 
 /// Returns true if passed check
@@ -117,7 +124,6 @@ pub async fn download_single(api: API, url: &str, save_dir: &Path, file_name: &s
         let data = match item {
             Ok(d) => d,
             Err(e) => {
-                // pb.finish_with_message("Error occurred!");
                 return Err(e.into());
             }
         };
