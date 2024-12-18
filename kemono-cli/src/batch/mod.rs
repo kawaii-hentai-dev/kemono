@@ -39,7 +39,7 @@ pub async fn download_loop(ctx: impl ctx::Context<'_>) -> Result<()> {
     let mut offset = 0;
 
     // 替换特殊字串符
-    let clear_title_re = regex::Regex::new(r#"[\\/:*?"<>|]"#)?;
+    let clear_title_re = regex::Regex::new(r#"[\\/:*?"<>|\n\r]"#)?;
     loop {
         if DONE.load(Ordering::Relaxed) {
             break;
