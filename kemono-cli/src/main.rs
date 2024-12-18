@@ -8,7 +8,7 @@ use tracing_indicatif::IndicatifLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer};
 
 use kemono_cli::{
-    batch::{ctx::Args, download_loop},
+    helper::{batch::download_all, ctx::Args},
     utils::extract_info,
     DONE,
 };
@@ -130,7 +130,7 @@ async fn main() -> Result<()> {
             .into(),
         )
         .build()?;
-    if let Err(e) = download_loop(&args).await {
+    if let Err(e) = download_all(&args).await {
         error!("{e}");
     }
 

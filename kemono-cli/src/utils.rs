@@ -1,6 +1,7 @@
 use std::{
     path::{Path, PathBuf},
     sync::atomic::Ordering,
+    time::Duration,
 };
 
 use anyhow::{anyhow, Result};
@@ -9,6 +10,7 @@ use regex::RegexSet;
 use tokio::{
     fs::{self, File},
     io::AsyncWriteExt,
+    time::timeout,
 };
 use tracing::{info, warn, Span};
 use tracing_indicatif::span_ext::IndicatifSpanExt;
@@ -65,7 +67,7 @@ pub fn whiteblack_regex_filter(white: &RegexSet, black: &RegexSet, heytrack: &st
 }
 
 #[tracing::instrument]
-pub async fn download_single(api: API, url: &str, save_dir: &Path, file_name: &str) -> Result<()> {
+pub async fn download_file(api: API, url: &str, save_dir: &Path, file_name: &str) -> Result<()> {
     if DONE.load(Ordering::Relaxed) {
         return Ok(());
     }
@@ -124,13 +126,8 @@ pub async fn download_single(api: API, url: &str, save_dir: &Path, file_name: &s
 
     let mut stream = resp.bytes_stream();
 
-    while let Some(item) = stream.next().await {
-        let data = match item {
-            Ok(d) => d,
-            Err(e) => {
-                return Err(e.into());
-            }
-        };
+    while let Some(item) = timeout(Duration::from_secs(10), stream.next()).await? {
+        let data = item?;
 
         if DONE.load(Ordering::Relaxed) {
             drop(file);
