@@ -22,23 +22,48 @@ use kemono_api::{
 
 use crate::DONE;
 
+pub struct DownloadInfo {
+    pub web_name: String,
+    pub user_id: String,
+    pub post_id: Option<String>,
+}
+
 /// 提取 web_name 和 user_id
-pub fn extract_info(url: &str) -> Result<(String, String)> {
+pub fn extract_info(url: &str) -> Result<DownloadInfo> {
     let url = Url::parse(url)?;
     let mut segments = url
         .path_segments()
         .ok_or_else(|| anyhow!("error: please provide an url with base"))?;
     let web_name = segments
         .next()
-        .ok_or_else(|| anyhow!("web_name not found in url"))?;
+        .ok_or_else(|| anyhow!("web_name not found in url"))?
+        .into();
     if segments.next() != Some("user") {
         anyhow::bail!("wrong url: https://.../<web_name>/user/<user_id>");
     }
     let user_id = segments
         .next()
-        .ok_or_else(|| anyhow!("user_id not found in url"))?;
+        .ok_or_else(|| anyhow!("user_id not found in url"))?
+        .into();
 
-    Ok((web_name.into(), user_id.into()))
+    match segments.next() {
+        Some("post") => segments
+            .next()
+            .map(|post_id| DownloadInfo {
+                web_name: web_name,
+                user_id: user_id,
+                post_id: Some(post_id.into()),
+            })
+            .ok_or_else(|| anyhow!("post_id cannot be parsed from URL")),
+        None => Ok(DownloadInfo {
+            web_name,
+            user_id,
+            post_id: None,
+        }),
+        _ => {
+            anyhow::bail!("wrong url: https://.../<web_name>/user/<user_id>/post/<post_id>");
+        }
+    }
 }
 
 pub fn normalize_pathname<'a>(s: &'a str) -> String {
@@ -66,7 +91,7 @@ pub fn whiteblack_regex_filter(white: &RegexSet, black: &RegexSet, heytrack: &st
     }
 }
 
-#[tracing::instrument]
+#[tracing::instrument(skip(api))]
 pub async fn download_file(api: API, url: &str, save_dir: &Path, file_name: &str) -> Result<()> {
     if DONE.load(Ordering::Relaxed) {
         return Ok(());

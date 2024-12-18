@@ -8,18 +8,23 @@ use tracing_indicatif::IndicatifLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer};
 
 use kemono_cli::{
-    helper::{batch::download_all, ctx::Args},
-    utils::extract_info,
+    helper::{batch::download_all, ctx::Args, single::download_one},
+    utils::{extract_info, DownloadInfo},
     DONE,
 };
 
 #[derive(Parser, Debug)]
 #[command(author, version, about = "Download tool")]
 struct Cli {
-    /// kemono user URL to fetch posts
+    /// kemono URL to fetch posts, can be user profile or single post
     ///
-    /// Example: https://kemono.su/fanbox/user/4107959
+    /// Example:
+    /// 
+    /// https://kemono.su/fanbox/user/4107959
+    /// 
+    /// https://kemono.su/fanbox/user/4107959/post/7999699
     url: String,
+
     /// Output directory of fetched posts
     #[arg(long, default_value = "./download")]
     output_dir: PathBuf,
@@ -96,8 +101,6 @@ async fn main() -> Result<()> {
         coomer,
     } = Cli::parse();
 
-    let (web_name, user_id) = extract_info(&url)?;
-
     info!("Download URL: {}", &url);
 
     fs::create_dir_all(&output_dir)?;
@@ -111,6 +114,12 @@ async fn main() -> Result<()> {
         }
         DONE.store(true, Ordering::Release);
     })?;
+
+    let DownloadInfo {
+        web_name,
+        user_id,
+        post_id,
+    } = extract_info(&url)?;
 
     let args = Args::builder()
         .web_name(web_name)
@@ -130,8 +139,18 @@ async fn main() -> Result<()> {
             .into(),
         )
         .build()?;
-    if let Err(e) = download_all(&args).await {
-        error!("{e}");
+
+    match post_id {
+        Some(post_id) => {
+            if let Err(e) = download_one(&args, &post_id).await {
+                error!("{e}");
+            }
+        }
+        None => {
+            if let Err(e) = download_all(&args).await {
+                error!("{e}");
+            }
+        }
     }
 
     info!("Task Exit");

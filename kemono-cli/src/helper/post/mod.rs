@@ -4,8 +4,7 @@ use std::sync::atomic::Ordering;
 use std::sync::Arc;
 
 use anyhow::{anyhow, Result};
-use kemono_api::model::post_info::{AttachmentLike, PostInfo};
-use kemono_api::serde_json::Value;
+use kemono_api::model::post_info::{AttachmentLike, Post, PostInfo};
 use regex::RegexSet;
 use tokio::fs;
 use tokio::sync::Semaphore;
@@ -96,7 +95,7 @@ pub(super) async fn download_post_attachments(
     ctx: &impl ctx::Context<'_>,
     save_path: &PathBuf,
     api: &API,
-    metadata: &Value,
+    metadata: &Post,
     attachments: impl Iterator<Item = Attachment<'_>>,
 ) -> Result<bool> {
     let max_concurrency = ctx.max_concurrency();
