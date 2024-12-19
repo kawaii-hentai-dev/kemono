@@ -74,8 +74,7 @@ jobs:
       - name: Prepare assets
         shell: bash
         run: |
-          mv target/${{ matrix.target }}/release/${{ matrix.bin }} .
-          tar -cvzf ${{ matrix.target }}.tar.gz LICENSE ${{ matrix.bin }}
+          tar -cvzf ${{ matrix.target }}.tar.gz LICENSE target/${{ matrix.target }}/release/${{ matrix.bin }}
           
       - name: Declare some variables
         id: vars
