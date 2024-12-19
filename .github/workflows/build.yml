@@ -36,7 +36,7 @@ jobs:
             
           - platform: linux-arm64
             target: aarch64-unknown-linux-gnu
-            os: ubuntu-latest
+            os: ubuntu-24.04
             bin: kemono-cli
             
           - platform: windows-x86_64
@@ -66,6 +66,13 @@ jobs:
         with:
           prefix-key: ${{ matrix.target }}-main
           save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Install dependencies
+        shell: bash
+        if: matrix.platform == "linux-arm64"
+        run: |
+          sudo apt-get update
+          sudo apt-get install gcc-14 gcc-14-aarch64-linux-gnu
 
       - name: Run code build
         run: |
