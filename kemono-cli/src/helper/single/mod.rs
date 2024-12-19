@@ -22,6 +22,10 @@ pub async fn download_one(ctx: impl Context<'_>, post_id: &str) -> Result<()> {
         },
         ..
     } = api.get_post_info(web_name, user_id, post_id).await?;
+    let mut post_title = post_title.as_str();
+    if post_title.is_empty() {
+        post_title = post_id;
+    }
 
     download_post(&ctx, &api, post_id, &post_title, &author).await?;
     Ok(())
