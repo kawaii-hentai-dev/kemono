@@ -69,7 +69,7 @@ jobs:
 
       - name: Install dependencies
         shell: bash
-        if: matrix.platform == "linux-arm64"
+        if: matrix.platform == 'linux-arm64'
         run: |
           sudo apt-get update
           sudo apt-get install gcc-14 gcc-14-aarch64-linux-gnu
