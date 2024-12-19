@@ -1,0 +1,92 @@
+# Origin config by @Kilerd
+
+name: Build Canary Version
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Release on ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        platform: [macos-x86_64, maxos-arm64, linux-x86_64, linux-arm64, windows-x86_64, windows-arm64]
+        include:
+        
+          - platform: macos-x86_64
+            target: x86_64-apple-darwin
+            os: macos-latest
+            bin: kemono-cli
+            
+          - platform: macos-arm64
+            target: aarch64-apple-darwin
+            os: macos-latest
+            bin: kemono-cli
+
+          - platform: linux-x86_64
+            target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            bin: kemono-cli
+            
+          - platform: linux-arm64
+            target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+            bin: kemono-cli
+            
+          - platform: windows-x86_64
+            target: x86_64-pc-windows-msvc
+            os: windows-latest
+            bin: kemono-cli.exe
+            
+          - platform: windows-arm64
+            target: aarch64-pc-windows-msvc
+            os: windows-latest
+            bin: kemono-cli.exe
+            
+    steps:
+      - name: Install toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          target: ${{ matrix.target }}
+          toolchain: nightly
+          override: true
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # fix revision count
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: ${{ matrix.target }}-main
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+
+      - name: Run code build
+        run: |
+          cargo build --release --target ${{ matrix.target }} --bin kemono-cli
+
+      - name: Prepare assets
+        shell: bash
+        run: |
+          mv target/${{ matrix.target }}/release/${{ matrix.bin }} .
+          tar -cvzf ${{ matrix.target }}.tar.gz LICENSE ${{ matrix.bin }}
+          
+      - name: Declare some variables
+        id: vars
+        shell: bash
+        run: |
+          rev_count=$(git rev-list --count HEAD)
+          echo rev_count=${rev_count} >> $GITHUB_OUTPUT
+
+      - name: Pre-Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.target }}.tar.gz
+          tag_name: r${{ steps.vars.outputs.rev_count }}
+          prerelease: false
+          make_latest: true
