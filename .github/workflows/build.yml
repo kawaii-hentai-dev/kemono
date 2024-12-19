@@ -75,7 +75,11 @@ jobs:
           sudo apt-get install gcc-14 gcc-14-aarch64-linux-gnu
 
       - name: Run code build
+        shell: bash
         run: |
+          if [[ linux-arm64 == ${{ matrix.platform }} ]]
+          then export CC=aarch64-linux-gnu-gcc-14
+          fi
           cargo build --release --target ${{ matrix.target }} --bin kemono-cli
 
       - name: Prepare assets
