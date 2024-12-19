@@ -71,7 +71,7 @@ pub fn normalize_pathname<'a>(s: &'a str) -> String {
     let result = s
         .replace(|ch| specials.contains(ch), "_")
         .replace(|ch: char| ch.is_control(), "_");
-    result.trim_end_matches('.').into()
+    result.trim_end_matches('.').trim_end().into()
 }
 
 /// Returns true if passed check
