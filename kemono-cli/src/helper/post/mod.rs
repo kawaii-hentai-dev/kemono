@@ -41,6 +41,11 @@ pub(crate) async fn download_post(
     let whitelist_filename_regex = RegexSet::new(whitelist_filename_regex)?;
     let blacklist_filename_regex = RegexSet::new(blacklist_filename_regex)?;
 
+    if !whiteblack_regex_filter(&whitelist_regex, &blacklist_regex, post_title) {
+        info!("Skipped {post_title} by filter");
+        return Ok(());
+    }
+
     let PostInfo {
         post: metadata,
         attachments,
@@ -51,11 +56,6 @@ pub(crate) async fn download_post(
         .map_err(|e| anyhow!("failed to get post info: {e}"))?;
 
     trace!("metadata: {metadata:?}");
-
-    if !whiteblack_regex_filter(&whitelist_regex, &blacklist_regex, post_title) {
-        info!("Skipped {post_title} by filter");
-        return Ok(());
-    }
 
     let post_dir = normalize_pathname(post_title);
     let save_path = output_dir.join(&author).join(post_dir.as_str());
