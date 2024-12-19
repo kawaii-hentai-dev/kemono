@@ -27,19 +27,20 @@ pub struct Post {
     pub shared_file: bool,
     pub added: String,
     pub published: String,
-    pub edited: String,
+    pub edited: Option<String>,
     pub file: File,
     pub attachments: Vec<AttachmentLike>,
     pub poll: Option<Poll>,
+    pub captions: Option<String>,
     pub tags: Option<Vec<String>>,
-    pub next: String,
-    pub prev: String,
+    pub next: Option<String>,
+    pub prev: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct File {
-    pub name: String,
-    pub path: String,
+    pub name: Option<String>,
+    pub path: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
