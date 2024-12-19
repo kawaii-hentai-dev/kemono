@@ -78,7 +78,9 @@ jobs:
         shell: bash
         run: |
           if [[ linux-arm64 == ${{ matrix.platform }} ]]
-          then export CC=aarch64-linux-gnu-gcc-14
+          then
+              export CC=aarch64-linux-gnu-gcc-14
+              export RUSTFLAGS="-C link-arg=-fuse-ld=lld"
           fi
           cargo build --release --target ${{ matrix.target }} --bin kemono-cli
 
