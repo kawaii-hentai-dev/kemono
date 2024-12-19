@@ -152,7 +152,7 @@ pub async fn download_file(api: API, url: &str, save_dir: &Path, file_name: &str
         let data = item?;
 
         if DONE.load(Ordering::Relaxed) {
-            drop(file);
+            file.flush().await?;
             return Ok(());
         }
 

@@ -98,19 +98,19 @@ pub(super) async fn download_post_attachments(
     api: &API,
     metadata: &Post,
     attachments: impl Iterator<Item = Attachment<'_>>,
-) -> Result<bool> {
+) -> Result<()> {
     let max_concurrency = ctx.max_concurrency();
 
     let semaphore = Arc::new(Semaphore::new(max_concurrency));
 
     if DONE.load(Ordering::Relaxed) {
-        return Ok(false);
+        return Ok(());
     }
 
     debug!("save_path: {}", save_path.to_string_lossy());
     if let Err(e) = fs::create_dir_all(&save_path).await {
         error!("failed to create save_path: {e}");
-        return Ok(false);
+        return Ok(());
     };
 
     let metadata_path = save_path.join("metadata.json");
@@ -123,7 +123,7 @@ pub(super) async fn download_post_attachments(
     .await
     {
         error!("failed to write metadata: {e}");
-        return Ok(false);
+        return Ok(());
     };
 
     let mut set = HashSet::new();
@@ -136,7 +136,7 @@ pub(super) async fn download_post_attachments(
     } in attachments
     {
         if DONE.load(Ordering::Relaxed) {
-            break;
+            anyhow::bail!("Received SIGINT, exiting!");
         }
 
         if !set.insert(file_name) {
@@ -163,7 +163,8 @@ pub(super) async fn download_post_attachments(
     tasks.join_all().await;
 
     if DONE.load(Ordering::Relaxed) {
-        return Ok(false);
+        anyhow::bail!("Received SIGINT, exiting!");
     }
-    Ok(true)
+
+    Ok(())
 }
