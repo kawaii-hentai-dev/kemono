@@ -2,6 +2,11 @@
 members = ["kemono-cli", "kemono-api"]
 resolver = "2"
 
+[profile.bench]
+lto = true
+codegen-units = 1
+opt-level = "z"
+
 [profile.release]
 lto = true
 strip = true
