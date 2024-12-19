@@ -20,7 +20,6 @@ use crate::DONE;
 mod model;
 use model::Attachment;
 
-#[tracing::instrument(skip(ctx, api))]
 pub(crate) async fn download_post(
     ctx: &impl ctx::Context<'_>,
     api: &API,
