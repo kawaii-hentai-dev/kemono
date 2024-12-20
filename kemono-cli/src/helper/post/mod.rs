@@ -20,6 +20,7 @@ use crate::DONE;
 mod model;
 use model::Attachment;
 
+#[tracing::instrument(skip(ctx, api))]
 pub(crate) async fn download_post(
     ctx: &impl ctx::Context<'_>,
     api: &API,
@@ -144,7 +145,7 @@ pub(super) async fn download_post_attachments(
             continue;
         }
 
-        let file_url = format!("{}/data{}", file_server, file_path);
+        let file_url = format!("{file_server}/data{file_path}");
         info!("Downloading {}", file_name);
 
         let api = api.clone();
@@ -153,7 +154,9 @@ pub(super) async fn download_post_attachments(
         let fname = file_name.to_string();
         let furl = file_url.clone();
         let fut = async move {
-            let _permit = sem.acquire().await;
+            let Ok(_permit) = sem.acquire().await else {
+                return;
+            };
             if let Err(e) = download_file(api, &furl, &sp, &fname).await {
                 error!("Error downloading {fname}: {e:?}");
             }
