@@ -72,7 +72,7 @@ jobs:
         if: matrix.platform == 'linux-arm64'
         run: |
           sudo apt-get update
-          sudo apt-get install gcc-14 gcc-14-aarch64-linux-gnu
+          sudo apt-get install gcc-14-aarch64-linux-gnu lld
 
       - name: Run code build
         shell: bash
