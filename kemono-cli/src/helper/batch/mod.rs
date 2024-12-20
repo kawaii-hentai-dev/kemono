@@ -4,7 +4,7 @@ use anyhow::{anyhow, Result};
 
 use kemono_api::model::posts_legacy::{PostsLegacy, Props, Result as PLResult};
 use kemono_api::API;
-use tracing::debug;
+use tracing::{debug, error};
 
 use crate::helper::post;
 use crate::utils::normalize_pathname;
@@ -44,6 +44,10 @@ pub async fn download_all(ctx: impl ctx::Context<'_>) -> Result<()> {
             title: ref post_title,
         } in results
         {
+            if DONE.load(Ordering::Relaxed) {
+                error!("Received SIGINT, exiting");
+                break;
+            }
             post::download_post(&ctx, &api, &post_id, &post_title, &author).await?;
         }
 

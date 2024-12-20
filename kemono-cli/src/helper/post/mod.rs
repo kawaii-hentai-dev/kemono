@@ -135,6 +135,7 @@ pub(super) async fn download_post_attachments(
     } in attachments
     {
         if DONE.load(Ordering::Relaxed) {
+            tasks.join_all().await;
             anyhow::bail!("Received SIGINT, exiting!");
         }
 
