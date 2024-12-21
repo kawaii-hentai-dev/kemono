@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-x86_64, macos-arm64, linux-x86_64, linux-arm64, linux-riscv64, linux-x86_64-musl, linux-arm64-musl, linux-riscv64-musl, windows-x86_64, windows-arm64]
+        platform: [macos-x86_64, macos-arm64, linux-x86_64, linux-arm64, linux-riscv64, linux-x86_64-musl, linux-arm64-musl, windows-x86_64, windows-arm64]
         include:
           - platform: macos-x86_64
             target: x86_64-apple-darwin
@@ -50,11 +50,6 @@ jobs:
             
           - platform: linux-arm64-musl
             target: aarch64-unknown-linux-musl
-            os: ubuntu-latest
-            bin: kemono-cli
-
-          - platform: linux-riscv64-musl
-            target: riscv64gc-unknown-linux-musl
             os: ubuntu-latest
             bin: kemono-cli
             
