@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use std::path::PathBuf;
-use std::sync::atomic::Ordering;
+use std::sync::atomic::{AtomicU16, Ordering};
 use std::sync::Arc;
 
 use anyhow::{anyhow, Result};
@@ -129,6 +129,7 @@ pub(super) async fn download_post_attachments(
     let mut set = HashSet::new();
     let mut tasks = JoinSet::new();
 
+    let position = Arc::new(AtomicU16::new(0));
     for Attachment {
         file_server,
         file_name,
@@ -153,11 +154,12 @@ pub(super) async fn download_post_attachments(
         let sp = save_path.clone();
         let fname = file_name.to_string();
         let furl = file_url.clone();
+        let position = position.clone();
         let fut = async move {
             let Ok(_permit) = sem.acquire().await else {
                 return;
             };
-            if let Err(e) = download_file(api, &furl, &sp, &fname).await {
+            if let Err(e) = download_file(api, &furl, &sp, &fname, &position).await {
                 error!("Error downloading {fname}: {e:?}");
             }
         };

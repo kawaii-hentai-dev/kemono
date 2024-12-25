@@ -1,4 +1,4 @@
-use std::{fs, path::PathBuf, sync::atomic::Ordering};
+use std::{fs, io::IsTerminal, path::PathBuf, sync::atomic::Ordering};
 
 use anyhow::Result;
 use clap::Parser;
@@ -62,6 +62,9 @@ struct Cli {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    kdam::term::init(std::io::stderr().is_terminal());
+    kdam::term::hide_cursor()?;
+
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::fmt::layer()

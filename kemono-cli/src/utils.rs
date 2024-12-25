@@ -1,11 +1,12 @@
 use std::{
     path::{Path, PathBuf},
-    sync::atomic::Ordering,
+    sync::atomic::{AtomicU16, Ordering},
     time::Duration,
 };
 
 use anyhow::{anyhow, Result};
 use futures_lite::StreamExt;
+use kdam::{tqdm, BarExt, Column, RichProgress, Spinner};
 use regex::RegexSet;
 use tokio::{
     fs::{self, File},
@@ -88,7 +89,13 @@ pub fn whiteblack_regex_filter(white: &RegexSet, black: &RegexSet, heytrack: &st
 }
 
 #[tracing::instrument(skip(api))]
-pub async fn download_file(api: API, url: &str, save_dir: &Path, file_name: &str) -> Result<()> {
+pub async fn download_file(
+    api: API,
+    url: &str,
+    save_dir: &Path,
+    file_name: &str,
+    position: &AtomicU16,
+) -> Result<()> {
     if DONE.load(Ordering::Relaxed) {
         return Ok(());
     }
@@ -133,7 +140,36 @@ pub async fn download_file(api: API, url: &str, save_dir: &Path, file_name: &str
         }
     };
 
+    let pb_position = position.fetch_add(1, Ordering::Relaxed);
+
     let start_pos = file.metadata().await?.len();
+    let mut pb = RichProgress::new(
+        tqdm!(
+            total = (total_size - start_pos) as usize,
+            initial = 0,
+            unit_scale = true,
+            unit_divisor = 1024,
+            unit = "B",
+            desc = file_name,
+            position = pb_position
+        ),
+        vec![
+            Column::Spinner(Spinner::new(
+                &["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"],
+                80.0,
+                1.0,
+            )),
+            Column::Text(format!("[blue bold]{file_name}")),
+            Column::Animation,
+            Column::Percentage(1),
+            Column::Text("•".to_owned()),
+            Column::CountTotal,
+            Column::Text("•".to_owned()),
+            Column::Rate,
+            Column::Text("•".to_owned()),
+            Column::RemainingTime,
+        ],
+    );
 
     let resp = api.get_stream(url, start_pos).await?;
     if !resp.status().is_success() {
@@ -152,6 +188,7 @@ pub async fn download_file(api: API, url: &str, save_dir: &Path, file_name: &str
         }
 
         writer.write_all(&data).await?;
+        pb.update(data.len())?;
     }
     writer.flush().await?;
     drop(writer);

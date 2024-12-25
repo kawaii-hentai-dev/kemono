@@ -19,6 +19,7 @@ ctrlc = "3"
 clap = { version = "4", features = ["derive"] }
 derive_builder = "0.20.2"
 regex = { version = "1", default-features = false, features = ["unicode"] }
+kdam = { version = "0.6.2", features = ["rich", "spinner", "unicode"] }
 
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = [
