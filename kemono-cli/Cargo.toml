@@ -28,3 +28,6 @@ tracing-subscriber = { version = "0.3.18", features = [
 ] }
 
 kemono-api = { path = "../kemono-api" }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+std = { version = "0.19.1", package = "eyra" }
