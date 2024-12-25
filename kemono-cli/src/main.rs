@@ -97,6 +97,7 @@ async fn main() -> Result<()> {
     ctrlc::set_handler(move || {
         if DONE.load(Ordering::Acquire) {
             info!("Signal handler called twice, force-exiting");
+            let _ = kdam::term::show_cursor();
             std::process::exit(127);
         } else {
             info!("Signal handler called");
@@ -142,6 +143,7 @@ async fn main() -> Result<()> {
         }
     }
 
+    kdam::term::show_cursor()?;
     info!("Task Exit");
 
     Ok(())
