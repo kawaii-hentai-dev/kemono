@@ -61,7 +61,7 @@ pub(crate) async fn download_post(
     let post_dir = normalize_pathname(post_title);
     let save_path = output_dir.join(&author).join(post_dir.as_str());
 
-    info!("{post_title} start");
+    info!("start");
 
     let attachments = attachments
         .iter()
@@ -87,7 +87,7 @@ pub(crate) async fn download_post(
         });
     download_post_attachments(ctx, &save_path, &api, &metadata, attachments).await?;
 
-    info!("{post_title} completed");
+    info!("completed");
 
     Ok(())
 }
