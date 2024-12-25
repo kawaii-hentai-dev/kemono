@@ -20,13 +20,10 @@ clap = { version = "4", features = ["derive"] }
 derive_builder = "0.20.2"
 regex = { version = "1", default-features = false, features = ["unicode"] }
 
-indicatif = "0.17"
-
 tracing = "0.1.40"
-tracing-subscriber = { version = "0.3.18", default-features = false, features = [
+tracing-subscriber = { version = "0.3.18", features = [
     "registry",
     "env-filter",
 ] }
-tracing-indicatif = "0.3.8"
 
 kemono-api = { path = "../kemono-api" }

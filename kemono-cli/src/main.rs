@@ -2,9 +2,7 @@ use std::{fs, path::PathBuf, sync::atomic::Ordering};
 
 use anyhow::Result;
 use clap::Parser;
-use indicatif::ProgressStyle;
 use tracing::{error, info, level_filters::LevelFilter};
-use tracing_indicatif::IndicatifLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer};
 
 use kemono_cli::{
@@ -19,9 +17,9 @@ struct Cli {
     /// kemono URL to fetch posts, can be user profile or single post
     ///
     /// Example:
-    /// 
+    ///
     /// https://kemono.su/fanbox/user/4107959
-    /// 
+    ///
     /// https://kemono.su/fanbox/user/4107959/post/7999699
     url: String,
 
@@ -64,28 +62,16 @@ struct Cli {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let indicatif_layer = IndicatifLayer::new()
-        .with_progress_style(
-            ProgressStyle::default_bar()
-                .template(
-                    "{spinner:.green} {msg} [{bar:40.cyan/blue}] {bytes}/{total_bytes} ({eta})",
-                )?
-                .progress_chars("#>-"),
-        )
-        .with_max_progress_bars(u64::MAX, None);
-
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::fmt::layer()
                 .with_level(true)
-                .with_writer(indicatif_layer.get_stderr_writer())
                 .with_filter(
                     EnvFilter::builder()
                         .with_default_directive(LevelFilter::INFO.into())
                         .from_env_lossy(),
                 ),
         )
-        .with(indicatif_layer)
         .init();
 
     let cli = Cli::parse();

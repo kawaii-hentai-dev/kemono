@@ -13,7 +13,6 @@ use tokio::{
     time::timeout,
 };
 use tracing::{info, warn};
-use tracing_indicatif::span_ext::IndicatifSpanExt;
 
 use kemono_api::{
     reqwest::{self, Url},
@@ -118,11 +117,6 @@ pub async fn download_file(api: API, url: &str, save_dir: &Path, file_name: &str
         }
     }
 
-    let span = tracing::Span::current();
-
-    span.pb_set_message(&format!("Downloading {}", file_name));
-    span.pb_set_length(total_size);
-
     let partial_file_path = save_path.to_string_lossy() + ".incomplete";
     let partial_file_path = PathBuf::from(partial_file_path.as_ref());
 
@@ -140,7 +134,6 @@ pub async fn download_file(api: API, url: &str, save_dir: &Path, file_name: &str
     };
 
     let start_pos = file.metadata().await?.len();
-    let mut pos = start_pos;
 
     let resp = api.get_stream(url, start_pos).await?;
     if !resp.status().is_success() {
@@ -159,9 +152,6 @@ pub async fn download_file(api: API, url: &str, save_dir: &Path, file_name: &str
         }
 
         writer.write_all(&data).await?;
-        let len = data.len() as u64;
-        pos += len;
-        span.pb_set_position(pos);
     }
     writer.flush().await?;
     drop(writer);
