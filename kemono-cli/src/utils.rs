@@ -9,7 +9,7 @@ use futures_lite::StreamExt;
 use regex::RegexSet;
 use tokio::{
     fs::{self, File},
-    io::AsyncWriteExt,
+    io::{AsyncWriteExt, BufWriter},
     time::timeout,
 };
 use tracing::{info, warn};
@@ -126,7 +126,7 @@ pub async fn download_file(api: API, url: &str, save_dir: &Path, file_name: &str
     let partial_file_path = save_path.to_string_lossy() + ".incomplete";
     let partial_file_path = PathBuf::from(partial_file_path.as_ref());
 
-    let mut file = match (partial_file_path.exists(), partial_file_path.is_file()) {
+    let file = match (partial_file_path.exists(), partial_file_path.is_file()) {
         (true, false) => {
             anyhow::bail!("partial_file_path existing as direcotry!");
         }
@@ -147,23 +147,24 @@ pub async fn download_file(api: API, url: &str, save_dir: &Path, file_name: &str
         anyhow::bail!("failed to download {} status_code {:?}", url, resp.status());
     }
 
+    let mut writer = BufWriter::with_capacity(10 * 1024 * 1024, file);
     let mut stream = resp.bytes_stream();
 
     while let Some(item) = timeout(Duration::from_secs(10), stream.next()).await? {
         let data = item?;
 
         if DONE.load(Ordering::Relaxed) {
-            file.flush().await?;
+            writer.flush().await?;
             return Ok(());
         }
 
-        file.write_all(&data).await?;
+        writer.write_all(&data).await?;
         let len = data.len() as u64;
         pos += len;
         span.pb_set_position(pos);
     }
-    file.flush().await?;
-    drop(file);
+    writer.flush().await?;
+    drop(writer);
     fs::rename(partial_file_path, save_path).await?;
 
     info!("Completed downloading {file_name}");
