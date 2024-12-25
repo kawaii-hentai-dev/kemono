@@ -67,6 +67,7 @@ jobs:
       - name: Build binary
         uses: houseabsolute/actions-rust-cross@v0
         with:
+          toolchain: nightly
           target: ${{ matrix.target }}
           args: "--locked --release --bin kemono-cli"
           strip: true
