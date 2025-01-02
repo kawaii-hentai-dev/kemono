@@ -2,6 +2,28 @@
 
 Downloader for [kemono.su](https://kemono.su)
 
+## Download
+
+[aarch64-apple-darwin]: https://github.com/kawaii-hentai-dev/kemono/releases/latest/download/aarch64-apple-darwin.tar.gz
+[aarch64-pc-windows-msvc]: https://github.com/kawaii-hentai-dev/kemono/releases/latest/download/aarch64-pc-windows-msvc.tar.gz
+[aarch64-unknown-linux-gnu]: https://github.com/kawaii-hentai-dev/kemono/releases/latest/download/aarch64-unknown-linux-gnu.tar.gz
+[x86_64-apple-darwin]: https://github.com/kawaii-hentai-dev/kemono/releases/latest/download/x86_64-apple-darwin.tar.gz
+[x86_64-pc-windows-msvc]: https://github.com/kawaii-hentai-dev/kemono/releases/latest/download/x86_64-pc-windows-msvc.tar.gz
+[x86_64-unknown-linux-gnu]: https://github.com/kawaii-hentai-dev/kemono/releases/latest/download/x86_64-unknown-linux-gnu.tar.gz
+[riscv64gc-unknown-linux-gnu]: https://github.com/kawaii-hentai-dev/kemono/releases/latest/download/riscv64gc-unknown-linux-gnu.tar.gz
+
+> Tip: Linux builds are fully static-linked
+
+| Arch      | OS      | Link                          |
+| --------- | ------- | ----------------------------- |
+| x86_64    | Windows | [x86_64-pc-windows-msvc]      |
+| x86_64    | MacOS   | [x86_64-apple-darwin]         |
+| x86_64    | Linux   | [x86_64-unknown-linux-gnu]    |
+| Arm64     | Windows | [aarch64-pc-windows-msvc]     |
+| Arm64     | MacOS   | [aarch64-apple-darwin]        |
+| Arm64     | Linux   | [aarch64-unknown-linux-gnu]   |
+| RISC-V 64 | Linux   | [riscv64gc-unknown-linux-gnu] |
+
 ## Installation
 
 ```bash
