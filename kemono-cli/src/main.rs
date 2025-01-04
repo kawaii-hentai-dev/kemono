@@ -1,12 +1,19 @@
-use std::{fs, io::IsTerminal, path::PathBuf, sync::atomic::Ordering};
+use std::{
+    fs,
+    io::IsTerminal,
+    path::PathBuf,
+    sync::{atomic::Ordering, LazyLock, Mutex},
+};
 
 use anyhow::Result;
 use clap::Parser;
+use kdam::tqdm;
 use tracing::{error, info, level_filters::LevelFilter};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer};
 
 use kemono_cli::{
     helper::{batch::download_all, ctx::Args, single::download_one},
+    stdio::WriteBar,
     utils::{extract_info, DownloadInfo},
     DONE,
 };
@@ -69,6 +76,11 @@ async fn main() -> Result<()> {
         .with(
             tracing_subscriber::fmt::layer()
                 .with_level(true)
+                .with_writer(|| {
+                    static PB: LazyLock<WriteBar> =
+                        LazyLock::new(|| WriteBar(Mutex::new(tqdm!(desc = "spent", position = 0, bar_format = "{desc}{elapsed}"))));
+                    &*PB
+                })
                 .with_filter(
                     EnvFilter::builder()
                         .with_default_directive(LevelFilter::INFO.into())

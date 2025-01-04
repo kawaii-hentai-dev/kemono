@@ -129,7 +129,7 @@ pub(super) async fn download_post_attachments(
     let mut set = HashSet::new();
     let mut tasks = JoinSet::new();
 
-    let position = Arc::new(AtomicU16::new(0));
+    let position = Arc::new(AtomicU16::new(1));
     for Attachment {
         file_server,
         file_name,
