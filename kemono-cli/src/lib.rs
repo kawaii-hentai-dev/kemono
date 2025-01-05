@@ -1,3 +1,5 @@
+#![feature(mpmc_channel)]
+
 use std::sync::atomic::AtomicBool;
 
 pub mod helper;

@@ -1,24 +1,24 @@
 use std::collections::HashSet;
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicU16, Ordering};
-use std::sync::Arc;
+use std::sync::atomic::Ordering;
 
 use anyhow::{anyhow, Result};
 use kemono_api::model::post_info::{AttachmentLike, Post, PostInfo};
 use regex::RegexSet;
 use tokio::fs;
-use tokio::sync::Semaphore;
 use tokio::task::JoinSet;
 use tracing::{debug, error, info, trace, warn};
 
 use kemono_api::API;
 
 use crate::helper::ctx;
-use crate::utils::{download_file, normalize_pathname, whiteblack_regex_filter};
+use crate::utils::{normalize_pathname, whiteblack_regex_filter};
 use crate::DONE;
 
 mod model;
 use model::Attachment;
+mod worker;
+use worker::{worker, Payload};
 
 #[tracing::instrument(skip(ctx, api))]
 pub(crate) async fn download_post(
@@ -99,9 +99,7 @@ pub(super) async fn download_post_attachments(
     metadata: &Post,
     attachments: impl Iterator<Item = Attachment<'_>>,
 ) -> Result<()> {
-    let max_concurrency = ctx.max_concurrency();
-
-    let semaphore = Arc::new(Semaphore::new(max_concurrency));
+    let max_concurrency = ctx.max_concurrency() as u16;
 
     if DONE.load(Ordering::Relaxed) {
         return Ok(());
@@ -129,7 +127,8 @@ pub(super) async fn download_post_attachments(
     let mut set = HashSet::new();
     let mut tasks = JoinSet::new();
 
-    let position = Arc::new(AtomicU16::new(1));
+    let (tx, rx) = std::sync::mpmc::channel();
+
     for Attachment {
         file_server,
         file_name,
@@ -150,21 +149,23 @@ pub(super) async fn download_post_attachments(
         info!("Downloading {}", file_name);
 
         let api = api.clone();
-        let sem = Arc::clone(&semaphore);
-        let sp = save_path.clone();
-        let fname = file_name.to_string();
-        let furl = file_url.clone();
-        let position = position.clone();
-        let fut = async move {
-            let Ok(_permit) = sem.acquire().await else {
-                return;
-            };
-            if let Err(e) = download_file(api, &furl, &sp, &fname, &position).await {
-                error!("Error downloading {fname}: {e:?}");
-            }
+        let save_dir = save_path.clone();
+        let file_name = file_name.to_string();
+        let url = file_url.clone();
+        let payload = Payload {
+            api,
+            url,
+            save_dir,
+            file_name,
         };
-        tasks.spawn(fut);
+        let _ = tx.send(payload);
     }
+
+    for position in 1..max_concurrency + 1 {
+        let rx = rx.clone();
+        tasks.spawn(worker(rx, position));
+    }
+
     tasks.join_all().await;
 
     if DONE.load(Ordering::Relaxed) {

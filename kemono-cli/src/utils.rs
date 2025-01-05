@@ -1,6 +1,6 @@
 use std::{
     path::{Path, PathBuf},
-    sync::atomic::{AtomicU16, Ordering},
+    sync::atomic::Ordering,
     time::Duration,
 };
 
@@ -88,13 +88,13 @@ pub fn whiteblack_regex_filter(white: &RegexSet, black: &RegexSet, heytrack: &st
     }
 }
 
-#[tracing::instrument(skip(api))]
+#[tracing::instrument(skip(api, position))]
 pub async fn download_file(
     api: API,
     url: &str,
     save_dir: &Path,
     file_name: &str,
-    position: &AtomicU16,
+    position: u16,
 ) -> Result<()> {
     if DONE.load(Ordering::Relaxed) {
         return Ok(());
@@ -140,8 +140,6 @@ pub async fn download_file(
         }
     };
 
-    let pb_position = position.fetch_add(1, Ordering::Relaxed);
-
     let start_pos = file.metadata().await?.len();
     let mut pb = RichProgress::new(
         tqdm!(
@@ -151,7 +149,7 @@ pub async fn download_file(
             unit_divisor = 1024,
             unit = "B",
             desc = file_name,
-            position = pb_position
+            position = position
         ),
         vec![
             Column::Spinner(Spinner::new(
