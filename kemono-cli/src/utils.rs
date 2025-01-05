@@ -13,7 +13,7 @@ use tokio::{
     io::{AsyncWriteExt, BufWriter},
     time::timeout,
 };
-use tracing::{info, warn};
+use tracing::{trace, warn};
 
 use kemono_api::{
     reqwest::{self, Url},
@@ -192,6 +192,6 @@ pub async fn download_file(
     drop(writer);
     fs::rename(partial_file_path, save_path).await?;
 
-    info!("Completed downloading {file_name}");
+    trace!("Completed downloading {file_name}");
     Ok(())
 }
