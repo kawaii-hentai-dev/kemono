@@ -14,8 +14,6 @@ mod bench {
         let black = RegexSet::new(["PSD"]).expect("failed to compile regex");
         let heytrack1 = "胡桃まんぐりっクス-高画質版";
 
-        bench.iter(std::hint::black_box(|| {
-            whiteblack_regex_filter(&white, &black, heytrack1)
-        }));
+        bench.iter(|| whiteblack_regex_filter(&white, &black, heytrack1));
     }
 }
